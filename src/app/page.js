@@ -512,7 +512,15 @@ export default function Home() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleFileChange(e.target.files[0])}
+                    onChange={(e) => {
+                      try {
+                        handleFileChange(e.target.files[0]);
+                      } catch (error) {
+                        console.error("Error in file change handler:", error);
+                        // You might also want to display a message to the user
+                        alert("An error occurred. Please try again.");
+                      }
+                    }}
                     className="absolute inset-0 opacity-0 cursor-pointer"
                     key={fileInputKey}
                   />

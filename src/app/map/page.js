@@ -100,7 +100,7 @@ export default function MapPage() {
                               <p>📍 {report.location}</p>
                               <p>Urgency: <span className="font-semibold">{report.pollution_level}</span></p>
                               <p>Date: {report.date}</p>
-                              <img src={report.imageUrl} alt="Report" className="w-full h-32 object-cover rounded-md mt-2"/>
+                              <Image src={report.imageUrl} alt="Report" width={200} height={200} className="w-full h-32 object-cover rounded-md mt-2"/>
                           </div>
                       </Popup>
                   </Marker>

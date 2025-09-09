@@ -301,7 +301,7 @@ export default function Home() {
 
             // Construct the desired string: Address, City, Zip Code
             const newLocation = `${street} ${houseNumber}, ${city}, ${postcode}`.trim().replace(/^,/, '').trim();
-            
+
             setLocation(newLocation || "Unknown Location");
             setSearchStatusMessage("Location found!");
           } else {
@@ -345,7 +345,7 @@ export default function Home() {
     const bstr = atob(arr[1]);
     let n = bstr.length;
     const u8arr = new Uint8Array(n);
-    while(n--) {
+    while (n--) {
       u8arr[n] = bstr.charCodeAt(n);
     }
     return new Blob([u8arr], { type: mime });
@@ -408,7 +408,7 @@ export default function Home() {
           setFileInputKey(Date.now());
           setCurrentUploadTask(null);
           setCoordinates("");
-          
+
           // Clear the form's local storage data on successful upload
           localStorage.removeItem('uploadFormState');
         }
@@ -467,8 +467,8 @@ export default function Home() {
     // This line saves all your form data to the browser before navigating
     saveFormState();
     if (coordinates && coordinates.trim() !== "Coordinates not found" && coordinates.trim() !== "Error converting address") {
-        const { lat, lon } = getCoords(coordinates);
-        router.push(`/pickedLocation?lat=${lat}&lon=${lon}&locationName=${encodeURIComponent(location)}`);
+      const { lat, lon } = getCoords(coordinates);
+      router.push(`/pickedLocation?lat=${lat}&lon=${lon}&locationName=${encodeURIComponent(location)}`);
     } else {
       setSearchStatusMessage("Please find coordinates before showing on map.");
     }
@@ -536,9 +536,11 @@ export default function Home() {
             <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
             {preview && (
               <div className="relative border rounded-lg overflow-hidden">
-                <img
+                <Image
                   src={preview}
                   alt="preview"
+                  width={600}
+                  height={400}
                   className="w-full h-auto object-cover"
                 />
                 <button
@@ -592,10 +594,10 @@ export default function Home() {
                 rows="1"
               />
               {searchStatusMessage && (
-                  <p className="text-sm text-center font-semibold text-gray-700">{searchStatusMessage}</p>
+                <p className="text-sm text-center font-semibold text-gray-700">{searchStatusMessage}</p>
               )}
               {apiErrorMessage && (
-                  <p className="text-red-500 text-sm text-center">{apiErrorMessage}</p>
+                <p className="text-red-500 text-sm text-center">{apiErrorMessage}</p>
               )}
               <button
                 type="button"
@@ -714,9 +716,11 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto max-h-[70vh] pr-2">
             {filteredGallery.map((item, i) => (
               <div key={i} className="bg-white/50 shadow-lg rounded-xl overflow-hidden transform transition-transform duration-300 hover:scale-105">
-                <img
+                <Image
                   src={item.imageUrl}
                   alt=""
+                  width={600}
+                  height={400}
                   className="w-full h-48 object-cover cursor-pointer"
                   onClick={() => handleImageClick(item)}
                 />
@@ -773,9 +777,11 @@ export default function Home() {
             className="relative flex flex-col rounded-lg shadow-lg max-h-[90vh] max-w-[90vw] bg-white/95 backdrop-blur-md p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
+            <Image
               src={selectedImage.imageUrl}
               alt="Enlarged view"
+              width={600}
+              height={400}
               className="rounded-lg max-h-[60vh] object-contain"
             />
             <div className="mt-4 text-center text-black">
@@ -801,8 +807,7 @@ export default function Home() {
                         onClick={handleCloseModal}
                         className="flex items-center gap-2 p-3 w-full text-left text-gray-800 hover:bg-gray-100 transition-colors"
                       >
-                        <img src="https://www.waze.com/favicon.ico" alt="Waze logo" className="w-5 h-5" />
-                        Waze
+                        <Image src="https://www.waze.com/favicon.ico" alt="Waze logo" width={10} height={10} className="w-5 h-5" />                        Waze
                       </a>
                       <a
                         href={`https://www.google.com/maps/dir/?api=1&destination=${getCoords(selectedImage.coordinates).lat},${getCoords(selectedImage.coordinates).lon}`}
@@ -811,8 +816,7 @@ export default function Home() {
                         onClick={handleCloseModal}
                         className="flex items-center gap-2 p-3 w-full text-left text-gray-800 hover:bg-gray-100 transition-colors"
                       >
-                        <img src="https://www.gstatic.com/images/branding/product/2x/maps_96dp.png" alt="Google Maps logo" className="w-5 h-5" />
-                        Google Maps
+                        <Image src="https://www.google.com/images/branding/product/2x/maps_96dp.png" alt="Google Maps logo" width={32} height={32} className="w-8 h-8" />                        Google Maps
                       </a>
                     </div>
                   )}

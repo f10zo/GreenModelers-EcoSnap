@@ -104,7 +104,7 @@ export default function Home() {
   // This effect runs every time a key form field changes, automatically saving the data.
   useEffect(() => {
     saveFormState();
-  }, [description, location, pollutionLevel, dateValue, timeValue, coordinates, preview]);
+  }, [description, location, pollutionLevel, dateValue, timeValue, coordinates, preview, saveFormState]); // Fix here: Added saveFormState to dependencies
 
   const fetchGallery = async () => {
     try {
@@ -470,7 +470,7 @@ export default function Home() {
         const { lat, lon } = getCoords(coordinates);
         router.push(`/pickedLocation?lat=${lat}&lon=${lon}&locationName=${encodeURIComponent(location)}`);
     } else {
-        setSearchStatusMessage("Please find coordinates before showing on map.");
+      setSearchStatusMessage("Please find coordinates before showing on map.");
     }
   };
 
@@ -737,7 +737,7 @@ export default function Home() {
         <div className="w-full backdrop-blur-sm bg-white/30 shadow-lg rounded-3xl p-6 overflow-y-auto text-black md:col-span-2 lg:col-span-3">
           <h3 className="text-2xl font-extrabold mb-4 text-blue-800">Keep Our Lake Clean!</h3>
           <p className="mb-4 text-sm text-gray-800 leading-relaxed">
-            <strong className="text-base text-green-700">Every action helps!</strong> Let's protect our natural resources together.
+            <strong className="text-base text-green-700">Every action helps!</strong> Let&apos;s protect our natural resources together.
           </p>
           <div className="space-y-4">
             <div>
@@ -805,17 +805,13 @@ export default function Home() {
                         Waze
                       </a>
                       <a
-                        href={`https://maps.google.com/?q=${getCoords(selectedImage.coordinates).lat},${getCoords(selectedImage.coordinates).lon}`}
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${getCoords(selectedImage.coordinates).lat},${getCoords(selectedImage.coordinates).lon}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={handleCloseModal}
                         className="flex items-center gap-2 p-3 w-full text-left text-gray-800 hover:bg-gray-100 transition-colors"
                       >
-                        <img
-                          src="https://www.google.com/favicon.ico"
-                          alt="Google Maps logo"
-                          className="w-5 h-5"
-                        />
+                        <img src="https://www.gstatic.com/images/branding/product/2x/maps_96dp.png" alt="Google Maps logo" className="w-5 h-5" />
                         Google Maps
                       </a>
                     </div>
@@ -823,6 +819,14 @@ export default function Home() {
                 </div>
               )}
             </div>
+            <button
+              onClick={handleCloseModal}
+              className="absolute top-2 right-2 p-1 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-colors z-10"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
       )}

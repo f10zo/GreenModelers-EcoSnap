@@ -180,7 +180,7 @@ export default function ContactUsPage() {
                     <div className="text-center">
                         <h1 className="text-4xl font-bold text-gray-900 mb-2">Get In Touch</h1>
                         <p className="text-gray-600">
-                            We'd love to hear from you. Fill out the form below to send us a message.
+                            We&apos;d love to hear from you. Fill out the form below to send us a message.
                         </p>
                         <div className="mt-4 text-xs text-gray-500 break-all">User ID: {userId || 'Authenticating...'}</div>
                     </div>

@@ -228,7 +228,7 @@ export default function Home() {
   const geocodeAddress = async (address) => {
     if (!address) return;
     try {
-      const response = await fetch(`https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(address)}&apiKey=${GEOAPIFY_API_KEY}`);
+      const response = await fetch(`https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&lang=en&apiKey=${process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY}`);
       if (!response.ok) throw new Error('Failed to fetch coordinates');
       const data = await response.json();
       if (data.features && data.features.length > 0) {
@@ -290,7 +290,7 @@ export default function Home() {
         setCoordinates(`Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`);
 
         try {
-          const response = await fetch(`https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&apiKey=${GEOAPIFY_API_KEY}`);
+          const response = await fetch(`https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&lang=en&apiKey=${process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY}`);
           const data = await response.json();
           if (data.features && data.features.length > 0) {
             const properties = data.features[0].properties;

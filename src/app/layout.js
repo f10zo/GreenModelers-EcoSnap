@@ -1,4 +1,3 @@
-// app/layout.js
 import "./globals.css"; // Import your global CSS file
 import { Inter } from "next/font/google"; // Import a font from Google
 import Link from "next/link"; // The change: Import the Link component
@@ -27,8 +26,9 @@ export default function RootLayout({ children }) {
             {children}
           </main>
 
-          <footer className="bg-gray-200 text-center p-4 bg-opacity-70 mt-auto">
-            <p>© {new Date().getFullYear()} My Next.js App</p>
+          {/* Updated footer to match the header and include the new text */}
+          <footer className="bg-gray-800 text-white text-center p-4 bg-opacity-70 mt-auto">
+            <p>© 2025 EcoSnap. All rights reserved.</p>
           </footer>
         </div>
       </body>

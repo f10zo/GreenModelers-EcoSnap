@@ -79,33 +79,33 @@ export default function ClientMap() {
           />
 
           {reports.map((report) => {
-              let iconToUse;
-              switch (report.pollution_level) {
-                  case 'High':
-                      iconToUse = redIcon;
-                      break;
-                  case 'Medium':
-                      iconToUse = yellowIcon;
-                      break;
-                  case 'Low':
-                      iconToUse = greenIcon;
-                      break;
-                  default:
-                      iconToUse = greenIcon;
-              }
-              return (
-                  <Marker key={report.id} position={[report.lat, report.lon]} icon={iconToUse}>
-                      <Popup>
-                          <div className="space-y-2 text-sm text-black">
-                              <p className="font-bold">{report.description}</p>
-                              <p>📍 {report.location}</p>
-                              <p>Urgency: <span className="font-semibold">{report.pollution_level}</span></p>
-                              <p>Date: {report.date}</p>
-                              <Image src={report.imageUrl} alt="Report" width={200} height={200} className="w-full h-32 object-cover rounded-md mt-2"/>
-                          </div>
-                      </Popup>
-                  </Marker>
-              );
+            let iconToUse;
+            switch (report.pollution_level) {
+              case 'High':
+                iconToUse = redIcon;
+                break;
+              case 'Medium':
+                iconToUse = yellowIcon;
+                break;
+              case 'Low':
+                iconToUse = greenIcon;
+                break;
+              default:
+                iconToUse = greenIcon;
+            }
+            return (
+              <Marker key={report.id} position={[report.lat, report.lon]} icon={iconToUse}>
+                <Popup>
+                  <div className="space-y-2 text-sm text-black">
+                    <p className="font-bold">{report.description}</p>
+                    <p>📍 {report.location}</p>
+                    <p>Urgency: <span className="font-semibold">{report.pollution_level}</span></p>
+                    <p>Date: {report.date}</p>
+                    <Image src={report.imageUrl} alt="Report" width={200} height={200} className="w-full h-32 object-cover rounded-md mt-2"/>
+                  </div>
+                </Popup>
+              </Marker>
+            );
           })}
         </MapContainer>
         <button

@@ -31,9 +31,3 @@ We welcome contributions\! If you have ideas for improvements or new features, c
 If you have any questions or feedback, feel free to reach out!
 
 - ✉️ **Email**: [fatmehzo3bi10@gmail.com](mailto:fatmehzo3bi10@gmail.com)
-
------
-
-## 📄 License
-
-This project is licensed under the MIT License.

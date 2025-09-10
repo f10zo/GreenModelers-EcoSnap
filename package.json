@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@geist-ui/core": "^2.3.8",
+    "browser-image-compression": "^2.0.2",
     "firebase": "^12.2.1",
     "leaflet": "^1.9.4",
     "next": "15.5.2",

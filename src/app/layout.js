@@ -19,6 +19,7 @@ export default function RootLayout({ children }) {
               {/* The changes are here: Replaced <a> with <Link> */}
               <Link href="/">Home</Link>
               <Link href="/about" className="ml-4">About</Link>
+              <Link href="/contact-us" className="ml-4">Contact</Link>
             </nav>
           </header>
 

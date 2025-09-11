@@ -1,63 +1,298 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
+import { initializeApp } from "firebase/app";
+import { getAuth, signInWithCustomToken, signInAnonymously } from "firebase/auth";
+import { getFirestore, collection, addDoc } from "firebase/firestore";
 
-export default function ContactUsPage() {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [message, setMessage] = useState('');
+// Function to safely access environment variables
+const getEnvVar = (name) => {
+    try {
+        return typeof window !== 'undefined' && typeof window[name] !== 'undefined' ? window[name] : null;
+    } catch (e) {
+        return null;
+    }
+};
+
+const firebaseConfig = getEnvVar('__firebase_config');
+const initialAuthToken = getEnvVar('__initial_auth_token');
+const appId = getEnvVar('__app_id') || 'default-app-id';
+
+let db;
+let auth;
+
+const ContactUsPage = () => {
+    const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
+        mobile: "",
+        email: "",
+        message: "",
+    });
+    const [status, setStatus] = useState("");
     const [currentTheme, setCurrentTheme] = useState('light');
+    const [firebaseReady, setFirebaseReady] = useState(false);
 
-    // Effect to detect the current theme
     useEffect(() => {
+        // Initialize Firebase and authenticate
+        if (firebaseConfig) {
+            try {
+                const app = initializeApp(JSON.parse(firebaseConfig));
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                const authenticate = async () => {
+                    try {
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                        setFirebaseReady(true);
+                    } catch (error) {
+                        console.error("Firebase authentication failed:", error);
+                        setFirebaseReady(false);
+                    }
+                };
+
+                authenticate();
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                setFirebaseReady(false);
+            }
+        } else {
+            console.error("Firebase config is missing.");
+            setFirebaseReady(false);
+        }
+
+        // MutationObserver to detect theme changes
         const observer = new MutationObserver(() => {
             const newTheme = document.documentElement.className;
             setCurrentTheme(newTheme);
         });
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
         return () => observer.disconnect();
     }, []);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log("Submit button was clicked. Form data:", { name, email, message });
-        // No action is performed after this point.
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
-    
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setStatus("");
+
+        if (!firebaseReady) {
+            setStatus("Firebase is not ready. Please try again in a moment.");
+            return;
+        }
+
+        try {
+            const collectionPath = `/artifacts/${appId}/public/data/contactRequests`;
+            await addDoc(collection(db, collectionPath), {
+                ...formData,
+                timestamp: new Date(),
+            });
+
+            setStatus("Your message has been sent successfully!");
+            setFormData({
+                firstName: "",
+                lastName: "",
+                mobile: "",
+                email: "",
+                message: "",
+            });
+        } catch (error) {
+            console.error("Error submitting request: ", error);
+            setStatus("Failed to send your message. Please try again.");
+        }
+    };
 
     return (
         <div className={`min-h-screen p-8 font-sans transition-colors duration-500`}>
-            <div className="container mx-auto max-w-2xl">
-                <div className={`backdrop-blur-sm rounded-xl shadow-lg p-8 space-y-8 transition-colors duration-500 ${currentTheme.includes('dark') ? 'bg-gray-800/60 text-white' : 'bg-white/30 text-black'}`}>
-                    <div className="text-center">
-                        <h1 className={`text-4xl font-bold mb-2 transition-colors duration-500 ${currentTheme.includes('dark') ? 'text-white-300' : 'text-white-700'}`}>Get In Touch With Us Now!</h1>
-                        <p className={`transition-colors duration-500 ${currentTheme.includes('dark') ? 'text-gray-300' : 'text-gray-800'}`}>
-                            We&apos;d love to hear from you. Fill out the form below to send us a message.
-                        </p>
+            <div className="container mx-auto max-w-7xl">
+                <div className={`backdrop-blur-sm rounded-xl shadow-lg p-8 space-y-8 transition-colors duration-500 grid grid-cols-1 md:grid-cols-2 gap-8 mt-24 ${currentTheme.includes('dark') ? 'bg-gray-800/60 text-white' : 'bg-white/30 text-black'}`}>
+                    <div className="space-y-8">
+                        <h2 className={`text-4xl font-bold mb-6 ${currentTheme.includes('dark') ? 'text-white' : 'text-black'}`}>Get In Touch With Us Now!</h2>
+                        <div className="space-y-6">
+                            {/* Our Mission */}
+                            <div className="flex items-start gap-4">
+                                <img
+                                    src="https://placehold.co/24x24/111827/ffffff?text=M"
+                                    alt="Mission Icon"
+                                    width={24}
+                                    height={24}
+                                    className="rounded-full p-1 bg-blue-100 dark:bg-blue-900"
+                                />
+                                <div>
+                                    <h3
+                                        className={`font-bold text-2xl mb-2 ${currentTheme.includes("dark") ? "text-white" : "text-black"
+                                            }`}
+                                    >
+                                        Our Mission
+                                    </h3>
+                                    <p
+                                        className={`text-lg ${currentTheme.includes("dark") ? "text-white" : "text-black"
+                                            }`}
+                                    >
+                                        Our <strong>M</strong>ission is to empower communities to protect our
+                                        lakes and natural habitats by providing a simple way to report pollution
+                                        and share information.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* How to Get Involved */}
+                            <div className="flex items-start gap-4">
+                                <img
+                                    src="https://placehold.co/24x24/111827/ffffff?text=V"
+                                    alt="Volunteering Icon"
+                                    width={24}
+                                    height={24}
+                                    className="rounded-full p-1 bg-blue-100 dark:bg-blue-900"
+                                />
+                                <div>
+                                    <h3
+                                        className={`font-bold text-2xl mb-2 ${currentTheme.includes("dark") ? "text-white" : "text-black"
+                                            }`}
+                                    >
+                                        How to Get Involved
+                                    </h3>
+                                    <p
+                                        className={`text-lg ${currentTheme.includes("dark") ? "text-white" : "text-black"
+                                            }`}
+                                    >
+                                        You can contribute by uploading pollution reports, <strong>V</strong>
+                                        olunteering for cleanup events, and spreading awareness. Every action
+                                        counts!
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Together, We Can Make a Difference */}
+                            <div className="flex items-start gap-4">
+                                <img
+                                    src="https://placehold.co/24x24/111827/ffffff?text=W"
+                                    alt="Teamwork Icon"
+                                    width={24}
+                                    height={24}
+                                    className="rounded-full p-1 bg-blue-100 dark:bg-blue-900"
+                                />
+                                <div>
+                                    <h3
+                                        className={`font-bold text-2xl mb-2 ${currentTheme.includes("dark") ? "text-white" : "text-black"
+                                            }`}
+                                    >
+                                        Together, We Can Make a Difference
+                                    </h3>
+                                    <p
+                                        className={`text-lg ${currentTheme.includes("dark") ? "text-white" : "text-black"
+                                            }`}
+                                    >
+                                        <strong>W</strong>e believe your reports are vital in helping local
+                                        organizations and authorities respond quickly to environmental issues.
+                                        Together, we can make a difference.
+                                    </p>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
-                    
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label htmlFor="name" className={`block text-sm font-medium mb-1 transition-colors duration-500 ${currentTheme.includes('dark') ? 'text-gray-300' : 'text-gray-700'}`}>Your Name</label>
-                            <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} required className={`form-input w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors duration-500 ${currentTheme.includes('dark') ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400' : 'bg-white/70 border-gray-300 text-black placeholder-gray-500'}`} />
-                        </div>
 
-                        <div>
-                            <label htmlFor="email" className={`block text-sm font-medium mb-1 transition-colors duration-500 ${currentTheme.includes('dark') ? 'text-gray-300' : 'text-gray-700'}`}>Your Email</label>
-                            <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={`form-input w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors duration-500 ${currentTheme.includes('dark') ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400' : 'bg-white/70 border-gray-300 text-black placeholder-gray-500'}`} />
-                        </div>
+                    <div className="space-y-6">
+                        <h2 className={`text-4xl font-bold text-center ${currentTheme.includes('dark') ? 'text-white' : 'text-black'}`}>CONTACT US</h2>
+                        <form onSubmit={handleSubmit} className="space-y-4">
 
-                        <div>
-                            <label htmlFor="message" className={`block text-sm font-medium mb-1 transition-colors duration-500 ${currentTheme.includes('dark') ? 'text-gray-300' : 'text-gray-700'}`}>Your Message</label>
-                            <textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} rows="4" required className={`form-input w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors duration-500 ${currentTheme.includes('dark') ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400' : 'bg-white/70 border-gray-300 text-black placeholder-gray-500'}`}></textarea>
-                        </div>
-                        
-                        <button type="submit" className="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-300 transform hover:scale-105">
-                            Submit Message
-                        </button>
-                    </form>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <input
+                                    type="text"
+                                    name="firstName"
+                                    placeholder="First Name *"
+                                    value={formData.firstName}
+                                    onChange={handleChange}
+                                    className={`p-3 w-full rounded border transition-colors duration-500
+      ${currentTheme.includes('dark')
+                                            ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 backdrop-blur-sm"
+                                            : "bg-white/50 border-gray-200 text-black placeholder-black backdrop-blur-sm"
+                                        }`}
+                                    required
+                                />
+                                <input
+                                    type="text"
+                                    name="lastName"
+                                    placeholder="Last Name *"
+                                    value={formData.lastName}
+                                    onChange={handleChange}
+                                    className={`p-3 w-full rounded border transition-colors duration-500
+      ${currentTheme.includes('dark')
+                                            ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 backdrop-blur-sm"
+                                            : "bg-white/50 border-gray-200 text-black placeholder-black backdrop-blur-sm"
+                                        }`}
+                                    required
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <input
+                                    type="text"
+                                    name="mobile"
+                                    placeholder="Mobile No *"
+                                    value={formData.mobile}
+                                    onChange={handleChange}
+                                    className={`p-3 w-full rounded border transition-colors duration-500
+      ${currentTheme.includes('dark')
+                                            ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 backdrop-blur-sm"
+                                            : "bg-white/50 border-gray-200 text-black placeholder-black backdrop-blur-sm"
+                                        }`}
+                                    required
+                                />
+                                <input
+                                    type="email"
+                                    name="email"
+                                    placeholder="Email ID *"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    className={`p-3 w-full rounded border transition-colors duration-500
+      ${currentTheme.includes('dark')
+                                            ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 backdrop-blur-sm"
+                                            : "bg-white/50 border-gray-200 text-black placeholder-black backdrop-blur-sm"
+                                        }`}
+                                    required
+                                />
+                            </div>
+
+                            <textarea
+                                name="message"
+                                placeholder="Message"
+                                rows="4"
+                                value={formData.message}
+                                onChange={handleChange}
+                                className={`p-3 w-full rounded border transition-colors duration-500
+    ${currentTheme.includes('dark')
+                                        ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 backdrop-blur-sm"
+                                        : "bg-white/50 border-gray-200 text-black placeholder-black backdrop-blur-sm"
+                                    }`}
+                                required
+                            ></textarea>
+
+
+
+                            <button type="submit" className="w-full p-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-all">
+                                Submit <i className="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+                        {status && <p className={`text-center mt-4 text-blue-600 ${currentTheme.includes('dark') ? 'dark:text-blue-400' : ''}`}>{status}</p>}
+                    </div>
+                </div>
+
+                <div className="w-40 h-40 mx-auto flex justify-center items-center mt-40">
+                    <img src="/lakeMapFooter.png" alt="Lake Map" width={150} height={150} className="rounded-lg p-6 sm:p-9" />
                 </div>
             </div>
         </div>
     );
 }
+
+export default ContactUsPage;

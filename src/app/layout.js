@@ -14,8 +14,11 @@ import HomePageBackground from "./home/components/HomePageBackground";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "My Next.js App",
-  description: "A description of my Next.js application.",
+  title: "EcoSnap",
+  description: "Track and report environmental issues easily",
+  icons: {
+    icon: "/eco_logo_navy.png",   // This will be your favicon
+  },
 };
 
 

@@ -231,17 +231,26 @@ export default function UploadForm({ onUploadSuccess }) {
 
     const startCamera = async () => {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert("Your browser does not support camera access. Please use a different browser like Chrome, Firefox, or Safari.");
+            alert("Your browser does not support camera access.");
             return;
         }
+
+        setIsCameraActive(true); // make sure <video> renders first
+
         try {
+            // small delay to ensure video element is rendered
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            videoRef.current.srcObject = stream;
-            videoStreamRef.current = stream;
-            setIsCameraActive(true);
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                videoStreamRef.current = stream;
+                videoRef.current.play();
+            }
         } catch (err) {
             console.error("Camera access denied or error:", err);
-            alert("Could not access the camera. Please check your browser's permissions for this site and ensure no other application is using the camera.");
+            alert("Could not access the camera. Please check your browser's permissions.");
+            setIsCameraActive(false);
         }
     };
 
@@ -460,8 +469,13 @@ export default function UploadForm({ onUploadSuccess }) {
             <h2 className="text-3xl font-bold mb-6">Upload Report</h2>
             <div className="space-y-4">
                 {isCameraActive ? (
-                    <div className="flex flex-col items-center">
-                        <video ref={videoRef} className="w-full rounded-lg mb-4"></video>
+                    <div className="flex flex-col items-center w-full max-w-md mx-auto">
+                        <video
+                            ref={videoRef}
+                            className="w-full rounded-lg mb-4"
+                            autoPlay
+                            playsInline
+                        ></video>
                         <div className="flex gap-2 w-full">
                             <button
                                 onClick={() => setIsCameraActive(false)}
@@ -491,19 +505,12 @@ export default function UploadForm({ onUploadSuccess }) {
                             <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => {
-                                    try {
-                                        handleFileChange(e.target.files[0]);
-                                    } catch (error) {
-                                        console.error("Error in file change handler:", error);
-                                        alert("An error occurred. Please try again.");
-                                    }
-                                }}
+                                onChange={(e) => handleFileChange(e.target.files[0])}
                                 className="absolute inset-0 opacity-0 cursor-pointer"
                                 key={fileInputKey}
                             />
                         </div>
-                        <div className="flex gap-2 justify-center mt-2">
+                        <div className="flex gap-2 justify-center mt-2 w-full max-w-md mx-auto">
                             <button
                                 onClick={() => document.querySelector('input[type="file"]').click()}
                                 className="flex-1 py-2 px-4 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors duration-200"
@@ -519,6 +526,8 @@ export default function UploadForm({ onUploadSuccess }) {
                         </div>
                     </>
                 )}
+
+
                 <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
                 {preview && (
                     <div className="relative border rounded-lg overflow-hidden">

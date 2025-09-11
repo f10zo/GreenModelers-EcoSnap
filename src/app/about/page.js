@@ -21,7 +21,7 @@ export default function AboutPage() {
         return () => observer.disconnect();
     }, []);
 
-    const imageUrl = currentTheme.includes('dark') ? '/lake-night1.png' : '/lake-daylight1.png';
+    const imageUrl = currentTheme.includes('dark') ? '/lake-dusk1.png' : '/lake-daylight1.png';
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen py-2">

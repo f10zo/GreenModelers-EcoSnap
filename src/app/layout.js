@@ -17,9 +17,12 @@ export const metadata = {
   title: "EcoSnap",
   description: "Track and report environmental issues easily",
   icons: {
-    icon: "/eco_logo_navy.png",   // This will be your favicon
+    icon: "/eco_logo_navy.png",   
+    shortcut: "/eco_logo_navy.png",
+    apple: "/eco_logo_navy.png",
   },
 };
+
 
 
 export default function RootLayout({ children }) {

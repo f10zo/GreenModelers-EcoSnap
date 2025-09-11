@@ -1,26 +1,42 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Common styles for the body */
 body {
-  background-image: url("/kin1.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-
-  /* This color will show behind the image and extend indefinitely. */
-  background-color: #1a202c;
-
-  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* Light theme styles and background image */
+.light {
+  /* This was causing the issue. Removed to allow the Tailwind background image to show. */
+  color: #171717;
+}
+
+/* Dark theme styles and background image with a semi-transparent overlay */
+.dark {
+  /* This was also causing a conflict. Removed for consistency. */
+  color: #ededed;
+}
+
+/* Styles for the semi-transparent overlay background */
+.backdrop-light {
+  background-color: rgba(255, 255, 255, 0.5); /* Whiteish semi-transparent */
+  backdrop-filter: blur(8px);
+}
+
+.backdrop-dark {
+  background-color: rgba(0, 0, 0, 0.5); /* Blackish semi-transparent */
+  backdrop-filter: blur(8px);
+}
+
+/* This is the key change: these classes will change the text and placeholder color */
+.text-input-light {
+  color: #000000;
+}
+
+.text-input-dark {
+  color: #ffffff;
 }

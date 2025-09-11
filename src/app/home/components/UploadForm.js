@@ -81,6 +81,7 @@ export default function UploadForm({ onUploadSuccess }) {
     const [coordinates, setCoordinates] = useState("");
     const [apiErrorMessage, setApiErrorMessage] = useState("");
     const [searchStatusMessage, setSearchStatusMessage] = useState("");
+    const [currentTheme, setCurrentTheme] = useState('light'); // Added new state for the theme
 
     const { dateInput, time } = getCurrentDateTime();
     const [dateValue, setDateValue] = useState(dateInput);
@@ -98,28 +99,35 @@ export default function UploadForm({ onUploadSuccess }) {
 
     const GEOAPIFY_API_KEY = "798aff4296834f94ae8593ec7f2146b5";
 
-    const handleFileChange = async (f) => { // NEW: Made the function async to await compression
+    // Added new useEffect to monitor theme changes
+    useEffect(() => {
+        const observer = new MutationObserver(() => {
+            const newTheme = document.documentElement.className;
+            setCurrentTheme(newTheme);
+        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        return () => observer.disconnect();
+    }, []);
+
+    const handleFileChange = async (f) => {
         if (f) {
-            // NEW: Compression options
             const options = {
-                maxSizeMB: 1,          // Set max file size to 1MB
-                maxWidthOrHeight: 1920, // Resize images to a max width/height of 1920px
-                useWebWorker: true,    // Use a web worker for better performance
+                maxSizeMB: 1,
+                maxWidthOrHeight: 1920,
+                useWebWorker: true,
             };
 
             try {
                 console.log(`Original file size: ${(f.size / 1024 / 1024).toFixed(2)} MB`);
-                // NEW: Await the compression result
                 const compressedFile = await imageCompression(f, options);
                 console.log(`Compressed file size: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
 
-                // From now on, use the compressed file for everything
                 setFile(compressedFile);
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     setPreview(reader.result);
                 };
-                reader.readAsDataURL(compressedFile); // Generate preview from the compressed file
+                reader.readAsDataURL(compressedFile);
                 setIsCameraActive(false);
             } catch (error) {
                 console.error("Image compression failed:", error);
@@ -132,7 +140,6 @@ export default function UploadForm({ onUploadSuccess }) {
             setPreview(null);
         }
     };
-
 
     const saveFormState = () => {
         const state = {
@@ -298,8 +305,6 @@ export default function UploadForm({ onUploadSuccess }) {
         if (!text) return '';
         let result = '';
         for (const char of text) {
-            // Check if the character exists in our map. If so, add its English equivalent.
-            // If not, just add the original character (e.g., numbers, punctuation).
             result += hebrewToEnglishMap[char] || char;
         }
         return result;
@@ -319,12 +324,10 @@ export default function UploadForm({ onUploadSuccess }) {
                     if (data.features && data.features.length > 0) {
                         const properties = data.features[0].properties;
 
-                        // Get the street, city, and postcode
                         let street = properties.street || '';
                         let city = properties.city || '';
                         const postcode = properties.postcode || '';
 
-                        // Transliterate only the street and city names
                         street = transliterateHebrew(street);
                         city = transliterateHebrew(city);
 
@@ -416,10 +419,8 @@ export default function UploadForm({ onUploadSuccess }) {
                     setCurrentUploadTask(null);
                     setCoordinates("");
                     localStorage.removeItem('uploadFormState');
-                    // Set a success message for the user
                     setSuccessMessage("Upload successful! Your report is now in the gallery.");
 
-                    // Clear the message after 5 seconds
                     setTimeout(() => {
                         setSuccessMessage("");
                     }, 5000);
@@ -455,7 +456,7 @@ export default function UploadForm({ onUploadSuccess }) {
     };
 
     return (
-        <div className="w-full backdrop-blur-sm bg-white/30 rounded-3xl shadow-2xl p-6 text-black md:col-span-1 lg:col-span-1">
+        <div className={`w-full backdrop-blur-sm rounded-3xl shadow-2xl p-6 ${currentTheme === 'dark' ? 'backdrop-dark text-white' : 'backdrop-light text-black'}`}>
             <h2 className="text-3xl font-bold mb-6">Upload Report</h2>
             <div className="space-y-4">
                 {isCameraActive ? (
@@ -479,14 +480,14 @@ export default function UploadForm({ onUploadSuccess }) {
                 ) : (
                     <>
                         <div
-                            className={`relative flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-4 bg-white/70 ${isDragging ? "border-blue-500 bg-blue-100" : "border-gray-300"}`}
+                            className={`relative flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-4 ${currentTheme === 'dark' ? 'bg-black/30 border-gray-600' : 'bg-white/70 border-gray-300'} ${isDragging ? "border-blue-500 bg-blue-100" : ""}`}
                             onDragOver={handleDragOver}
                             onDragLeave={handleDragLeave}
                             onDrop={handleDrop}
                         >
-                            <FiUpload className="text-gray-500 w-8 h-8" />
-                            <p className="text-gray-500 text-sm">Drag and drop a photo here,</p>
-                            <p className="text-gray-500 text-sm">or click to choose one.</p>
+                            <FiUpload className={`w-8 h-8 ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                            <p className={`text-sm ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Drag and drop a photo here,</p>
+                            <p className={`text-sm ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>or click to choose one.</p>
                             <input
                                 type="file"
                                 accept="image/*"
@@ -552,7 +553,7 @@ export default function UploadForm({ onUploadSuccess }) {
                 <div className="flex gap-2">
                     <textarea
                         placeholder="Location (Address, City, Zip Code)"
-                        className="flex-1 border rounded-lg p-2 bg-white/70 resize-none"
+                        className={`flex-1 border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white placeholder-gray-400' : 'bg-white/70 text-black placeholder-gray-500'}`}
                         value={location}
                         onChange={handleLocationChange}
                         rows="2"
@@ -574,13 +575,13 @@ export default function UploadForm({ onUploadSuccess }) {
                 </div>
                 <textarea
                     placeholder="Coordinates"
-                    className="flex-1 border rounded-lg p-2 bg-white/70 resize-none"
+                    className={`flex-1 border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white placeholder-gray-400' : 'bg-white/70 text-black placeholder-gray-500'}`}
                     value={coordinates}
                     readOnly={true}
                     rows="1"
                 />
                 {searchStatusMessage && (
-                    <p className="text-sm text-center font-semibold text-gray-700">{searchStatusMessage}</p>
+                    <p className={`text-sm text-center font-semibold ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-700'}`}>{searchStatusMessage}</p>
                 )}
                 {apiErrorMessage && (
                     <p className="text-red-500 text-sm text-center">{apiErrorMessage}</p>
@@ -596,13 +597,13 @@ export default function UploadForm({ onUploadSuccess }) {
                     <label className="font-semibold">Date:</label>
                     <input
                         type="date"
-                        className="border rounded-lg p-1 flex-1 bg-white/70"
+                        className={`border rounded-lg p-1 flex-1 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`}
                         value={dateValue}
                         onChange={(e) => setDateValue(e.target.value)}
                     />
                     <input
                         type="time"
-                        className="border rounded-lg p-1 flex-1 bg-white/70"
+                        className={`border rounded-lg p-1 flex-1 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`}
                         value={timeValue}
                         onChange={(e) => setTimeValue(e.target.value)}
                     />
@@ -614,7 +615,8 @@ export default function UploadForm({ onUploadSuccess }) {
                         Now
                     </button>
                 </div>
-                <label className="font-semibold block mt-2">Urgency of the pollution:</label>
+
+                <label className="font-semibold block mt-2 text-lg">Select the Urgency of this Report:</label>
                 <div className="flex gap-2">
                     {["Low", "Medium", "High"].map((level) => {
                         const colors = {
@@ -641,7 +643,7 @@ export default function UploadForm({ onUploadSuccess }) {
                 </div>
                 <textarea
                     placeholder="Description"
-                    className="w-full border rounded-lg p-2 resize-none bg-white/70"
+                    className={`w-full border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white placeholder-gray-400' : 'bg-white/70 text-black placeholder-gray-500'}`}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                 />
@@ -668,6 +670,7 @@ export default function UploadForm({ onUploadSuccess }) {
             >
                 Submit Report
             </button>
+
             {successMessage && (
                 <div className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-100" role="alert">
                     <span className="font-medium">Success!</span> {successMessage}

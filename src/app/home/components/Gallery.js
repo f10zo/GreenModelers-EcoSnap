@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from "react";
 import { db } from "../../../firebase";
@@ -24,6 +24,16 @@ export default function Gallery({ onUploadSuccess }) {
     const [selectedImage, setSelectedImage] = useState(null);
     const [showNavOptions, setShowNavOptions] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [currentTheme, setCurrentTheme] = useState('light');
+
+    useEffect(() => {
+        const observer = new MutationObserver(() => {
+            const newTheme = document.documentElement.className;
+            setCurrentTheme(newTheme);
+        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        return () => observer.disconnect();
+    }, []);
 
     useEffect(() => {
         // This is the real-time listener that automatically updates the gallery.
@@ -66,8 +76,10 @@ export default function Gallery({ onUploadSuccess }) {
         });
 
     return (
-        <div className="w-full backdrop-blur-sm bg-white/30 rounded-3xl shadow-2xl p-6 text-black md:col-span-1 lg:col-span-2">
-            <h2 className="text-3xl font-bold mb-6">📸 Gallery</h2>
+        <div className={`w-full rounded-3xl shadow 2xl p-6 md:col-span-1 lg:col-span-2 ${currentTheme === 'dark' ? 'bg-slate-800/80 text-white' : 'bg-white/30 text-black'}`} style={{ backdropFilter: 'blur(1px)' }}>
+            <h3 className={`text-3xl font-extrabold mb-4 text-left flex items-center gap-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'text-white-300' : 'text-white-700'}`}>
+                📸 Gallery
+            </h3>
             <div className="mb-4">
                 <Link href="/map">
                     <button className="py-2 px-4 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition-colors duration-200 w-full">
@@ -77,7 +89,7 @@ export default function Gallery({ onUploadSuccess }) {
             </div>
             <div className="flex gap-4 mb-6">
                 <select
-                    className="flex-1 border rounded-lg p-2 font-semibold bg-white/70"
+                    className={`flex-1 border rounded-lg p-2 font-semibold ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`}
                     value={filterPollution}
                     onChange={(e) => setFilterPollution(e.target.value)}
                 >
@@ -87,7 +99,7 @@ export default function Gallery({ onUploadSuccess }) {
                     <option>High</option>
                 </select>
                 <select
-                    className="flex-1 border rounded-lg p-2 font-semibold bg-white/70"
+                    className={`flex-1 border rounded-lg p-2 font-semibold ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`}
                     value={dateSort}
                     onChange={(e) => setDateSort(e.target.value)}
                 >
@@ -97,12 +109,12 @@ export default function Gallery({ onUploadSuccess }) {
             </div>
             {loading ? (
                 <div className="flex justify-center items-center h-full">
-                    <p className="text-gray-500 text-lg">Loading...</p>
+                    <p className={`${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'} text-lg`}>Loading...</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto max-h-[70vh] pr-2">
                     {filteredGallery.map((item, i) => (
-                        <div key={i} className="bg-white/50 shadow-lg rounded-xl overflow-hidden transform transition-transform duration-300 hover:scale-105">
+                        <div key={i} className={`shadow-lg rounded-xl overflow-hidden transform transition-transform duration-300 hover:scale-105 ${currentTheme === 'dark' ? 'bg-black/50 text-white' : 'bg-white/50 text-black'}`}>
                             <Image
                                 src={item.imageUrl}
                                 alt=""
@@ -113,10 +125,10 @@ export default function Gallery({ onUploadSuccess }) {
                             />
                             <div className="p-3">
                                 <p className="text-sm font-semibold">{item.description}</p>
-                                <p className="text-xs text-gray-600 mt-1">
+                                <p className={`text-xs mt-1 ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                                     📍 {item.location}
                                 </p>
-                                <div className="flex items-center text-xs text-gray-600 mt-1">
+                                <div className={`flex items-center text-xs mt-1 ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                                     <span className={`w-3 h-3 rounded-full mr-2 ${item.pollution_level === 'Low' ? 'bg-green-500' : item.pollution_level === 'Medium' ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
                                     {item.pollution_level} | {item.date}
                                 </div>
@@ -127,11 +139,11 @@ export default function Gallery({ onUploadSuccess }) {
             )}
             {selectedImage && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50"
+                    className={`fixed inset-0 bg-black backdrop-blur-sm flex items-center justify-center p-4 z-50 ${currentTheme === 'dark' ? 'bg-opacity-90' : 'bg-opacity-75'}`}
                     onClick={handleCloseModal}
                 >
                     <div
-                        className="relative flex flex-col rounded-lg shadow-lg max-h-[90vh] max-w-[90vw] bg-white/95 backdrop-blur-md p-4"
+                        className={`relative flex flex-col rounded-lg shadow-lg max-h-[90vh] max-w-[90vw] p-4 ${currentTheme === 'dark' ? 'bg-black/80 text-white' : 'bg-white/95 text-black'}`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <Image
@@ -141,10 +153,10 @@ export default function Gallery({ onUploadSuccess }) {
                             height={400}
                             className="rounded-lg max-h-[60vh] object-contain"
                         />
-                        <div className="mt-4 text-center text-black">
+                        <div className="mt-4 text-center">
                             <p className="font-bold text-lg">{selectedImage.description}</p>
-                            <p className="text-sm text-gray-700 mt-1">📍 {selectedImage.location}</p>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className={`text-sm mt-1 ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-700'}`}>📍 {selectedImage.location}</p>
+                            <p className={`text-xs mt-1 ${currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
                                 {selectedImage.pollution_level} | {selectedImage.date}
                             </p>
                             {selectedImage.coordinates && (
@@ -156,13 +168,13 @@ export default function Gallery({ onUploadSuccess }) {
                                         Navigate
                                     </button>
                                     {showNavOptions && (
-                                        <div className="absolute bottom-full mb-2 w-48 bg-white rounded-lg shadow-lg overflow-hidden">
+                                        <div className={`absolute bottom-full mb-2 w-48 rounded-lg shadow-lg overflow-hidden ${currentTheme === 'dark' ? 'bg-black/90' : 'bg-white'}`}>
                                             <a
                                                 href={`https://waze.com/ul?ll=${getCoords(selectedImage.coordinates).lat},${getCoords(selectedImage.coordinates).lon}&navigate=yes`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 onClick={handleCloseModal}
-                                                className="flex items-center gap-2 p-3 w-full text-left text-gray-800 hover:bg-gray-100 transition-colors"
+                                                className={`flex items-center gap-2 p-3 w-full text-left transition-colors ${currentTheme === 'dark' ? 'text-white hover:bg-gray-800' : 'text-gray-800 hover:bg-gray-100'}`}
                                             >
                                                 <Image src="https://www.waze.com/favicon.ico" alt="Waze logo" width={10} height={10} className="w-5 h-5" /> Waze
                                             </a>
@@ -171,7 +183,7 @@ export default function Gallery({ onUploadSuccess }) {
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 onClick={handleCloseModal}
-                                                className="flex items-center gap-2 p-3 w-full text-left text-gray-800 hover:bg-gray-100 transition-colors"
+                                                className={`flex items-center gap-2 p-3 w-full text-left transition-colors ${currentTheme === 'dark' ? 'text-white hover:bg-gray-800' : 'text-gray-800 hover:bg-gray-100'}`}
                                             >
                                                 <Image src="https://www.google.com/images/branding/product/2x/maps_96dp.png" alt="Google Maps logo" width={32} height={32} className="w-8 h-8" /> Google Maps
                                             </a>

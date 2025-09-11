@@ -5,6 +5,8 @@ import { db } from "../../../firebase";
 import { collection, query, onSnapshot } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
+import { FaWaze, FaGoogle } from "react-icons/fa";
+
 
 const getCoords = (coordString) => {
     if (!coordString || !coordString.includes("Lat:") || !coordString.includes("Lon:")) {
@@ -169,6 +171,7 @@ export default function Gallery({ onUploadSuccess }) {
                                     </button>
                                     {showNavOptions && (
                                         <div className={`absolute bottom-full mb-2 w-48 rounded-lg shadow-lg overflow-hidden ${currentTheme === 'dark' ? 'bg-black/90' : 'bg-white'}`}>
+
                                             <a
                                                 href={`https://waze.com/ul?ll=${getCoords(selectedImage.coordinates).lat},${getCoords(selectedImage.coordinates).lon}&navigate=yes`}
                                                 target="_blank"
@@ -176,7 +179,7 @@ export default function Gallery({ onUploadSuccess }) {
                                                 onClick={handleCloseModal}
                                                 className={`flex items-center gap-2 p-3 w-full text-left transition-colors ${currentTheme === 'dark' ? 'text-white hover:bg-gray-800' : 'text-gray-800 hover:bg-gray-100'}`}
                                             >
-                                                <Image src="https://www.waze.com/favicon.ico" alt="Waze logo" width={10} height={10} className="w-5 h-5" /> Waze
+                                                <FaWaze className="w-6 h-6 text-blue-500" /> Waze
                                             </a>
                                             <a
                                                 href={`https://www.google.com/maps/dir/?api=1&destination=${getCoords(selectedImage.coordinates).lat},${getCoords(selectedImage.coordinates).lon}`}
@@ -185,8 +188,18 @@ export default function Gallery({ onUploadSuccess }) {
                                                 onClick={handleCloseModal}
                                                 className={`flex items-center gap-2 p-3 w-full text-left transition-colors ${currentTheme === 'dark' ? 'text-white hover:bg-gray-800' : 'text-gray-800 hover:bg-gray-100'}`}
                                             >
-                                                <Image src="https://www.google.com/images/branding/product/2x/maps_96dp.png" alt="Google Maps logo" width={32} height={32} className="w-8 h-8" /> Google Maps
+                                                <FaGoogle
+                                                    className="w-6 h-6"
+                                                    style={{
+                                                        background: "conic-gradient(from -45deg, #ea4335, #fbbc05, #34a853, #4285f4)",
+                                                        WebkitBackgroundClip: "text",
+                                                        WebkitTextFillColor: "transparent"
+                                                    }}
+                                                />
+                                                Google Maps
                                             </a>
+
+
                                         </div>
                                     )}
                                 </div>

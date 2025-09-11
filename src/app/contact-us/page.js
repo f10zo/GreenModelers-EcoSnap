@@ -287,9 +287,16 @@ const ContactUsPage = () => {
                     </div>
                 </div>
 
-                <div className="w-40 h-40 mx-auto flex justify-center items-center mt-40">
-                    <img src="/lakeMapFooter.png" alt="Lake Map" width={150} height={150} className="rounded-lg p-6 sm:p-9" />
-                </div>
+                <div className="w-full flex justify-center items-end mt-10">
+  <img
+    src="/lakeMaps.jpg"
+    alt="Lake Map"
+    className="rounded-lg p-6 sm:p-9 w-full max-w-xs h-auto"
+  />
+</div>
+
+
+
             </div>
         </div>
     );

@@ -22,7 +22,7 @@ export default function ThemeToggle() {
 
   return (
     <button onClick={toggleTheme} className="p-2 rounded-full text-white">
-      {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+      {theme === 'light' ? '🌙' : '☀️'}
     </button>
   );
 }

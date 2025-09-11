@@ -32,7 +32,7 @@ export default function ContactUsPage() {
                     <div className="text-center">
                         <h1 className={`text-4xl font-bold mb-2 transition-colors duration-500 ${currentTheme.includes('dark') ? 'text-white-300' : 'text-white-700'}`}>Get In Touch With Us Now!</h1>
                         <p className={`transition-colors duration-500 ${currentTheme.includes('dark') ? 'text-gray-300' : 'text-gray-800'}`}>
-                            We'd love to hear from you. Fill out the form below to send us a message.
+                            We&apos;d love to hear from you. Fill out the form below to send us a message.
                         </p>
                     </div>
                     

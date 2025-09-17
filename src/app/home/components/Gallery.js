@@ -78,16 +78,17 @@ export default function Gallery({ onUploadSuccess }) {
         });
 
     return (
-        <div className={`w-full rounded-3xl shadow 2xl p-6 md:col-span-1 lg:col-span-2 ${currentTheme === 'dark' ? 'bg-slate-800/80 text-white' : 'bg-white/30 text-black'}`} style={{ backdropFilter: 'blur(1px)' }}>
+        <div
+            className={`w-full shadow-xl rounded-3xl p-6 overflow-y-auto border-2 transition-colors duration-500 md:col-span-2 lg:col-span-3 ${currentTheme === 'dark'
+                ? 'bg-slate-800/80 text-white border-emerald-700'
+                : 'bg-white/30 text-black border-emerald-300'
+                }`}
+            style={{ backdropFilter: 'blur(1px)' }}
+        >
             <h3 className={`text-3xl font-extrabold mb-4 text-left flex items-center gap-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'text-white-300' : 'text-white-700'}`}>
                 📸 Gallery
             </h3>
             <div className="mb-4">
-                <Link href="/map">
-                    <button className="py-2 px-4 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition-colors duration-200 w-full">
-                        View Reports on Map 🗺️
-                    </button>
-                </Link>
             </div>
             <div className="flex gap-4 mb-6">
                 <select

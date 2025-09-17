@@ -5,7 +5,12 @@ import { db } from "../firebase";
 import { collection, query, onSnapshot } from "firebase/firestore";
 import Gallery from "./home/components/Gallery";
 import InfoSection from "./home/components/InfoSection";
-import ReportsMap from "./home/components/ReportsMap";
+import dynamic from "next/dynamic";
+
+const ReportsMap = dynamic(
+  () => import("./home/components/ReportsMap"),
+  { ssr: false } // disable server-side rendering
+);
 
 export default function Home() {
     const [reports, setReports] = useState([]);

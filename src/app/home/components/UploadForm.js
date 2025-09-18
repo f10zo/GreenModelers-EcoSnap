@@ -1,14 +1,19 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
+import dynamic from 'next/dynamic';
+import Image from "next/image";
+import { useRouter } from 'next/navigation';
+import { FiUpload, FiCamera } from "react-icons/fi";
 import { db, storage } from "../../../firebase";
 import { collection, addDoc, getDocs, query, orderBy } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { FiUpload, FiCamera } from "react-icons/fi";
-import Image from "next/image";
-import { useRouter } from 'next/navigation';
 import imageCompression from 'browser-image-compression';
 
+// Dynamically import the map component
+const PickedLocationMap = dynamic(() => import('./PickedLocationMap'), {
+    ssr: false,
+});
 
 // Helper function to get the current formatted date and time
 const getCurrentDateTime = () => {
@@ -39,25 +44,27 @@ const dataURLtoBlob = (dataurl) => {
     return new Blob([u8arr], { type: mime });
 };
 
+
 // Helper function for geocoding
-const geocodeAddress = async (address, GEOAPIFY_API_KEY) => {
-    if (!address) return;
+const geocodeAddress = async (latitude, longitude, LOCATIONIQ_API_KEY) => {
+    if (!latitude || !longitude) return null;
     try {
-        const response = await fetch(`https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&lang=en&apiKey=${GEOAPIFY_API_KEY}`);
-        if (!response.ok) throw new Error('Failed to fetch coordinates');
+        const response = await fetch(`https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_API_KEY}&lat=${latitude}&lon=${longitude}&format=json`);
+        if (!response.ok) throw new Error('Failed to fetch location data');
         const data = await response.json();
-        if (data.features && data.features.length > 0) {
-            const { lat, lon, street, housenumber, postcode, city } = data.features[0].properties;
-            return { lat, lon, street, housenumber, postcode, city };
+
+        if (data.address) {
+            const { lat, lon } = data;
+            const { road, city, postcode, country } = data.address;
+            return { lat, lon, road, city, postcode, country };
         } else {
             return null;
         }
     } catch (error) {
-        console.error("Geocoding error:", error);
+        console.error("Reverse geocoding error:", error);
         return null;
     }
 };
-
 const getCoords = (coordString) => {
     if (!coordString || !coordString.includes("Lat:") || !coordString.includes("Lon:")) {
         console.error("Invalid coordinate string format:", coordString);
@@ -69,37 +76,78 @@ const getCoords = (coordString) => {
     return { lat, lon };
 };
 
+const galileeBeaches = [
+    { id: 'amnion-bay', name: 'מפרץ אמנון', lat: 32.8911, lon: 35.5967 },
+    { id: 'kinneret', name: 'כינר', lat: 32.7935, lon: 35.5562 },
+    { id: 'duga', name: 'דוגה', lat: 32.8597, lon: 35.6473 },
+    { id: 'dugit', name: 'דוגית', lat: 32.8499, lon: 35.6489 },
+    { id: 'golan', name: 'גולן', lat: 32.8485, lon: 35.6496 },
+    { id: 'tzaalon', name: 'צאלון', lat: 32.8400, lon: 35.6500 },
+    { id: 'kursi', name: 'כורסי', lat: 32.8248, lon: 35.6488 },
+    { id: 'lebanon', name: 'לבנון', lat: 32.8200, lon: 35.6500 },
+    { id: 'halukim', name: 'חלוקים', lat: 32.7980, lon: 35.6190 },
+    { id: 'gofra', name: 'גופרה', lat: 32.8033, lon: 35.6436 },
+    { id: 'susita', name: 'סוסיתא', lat: 32.7900, lon: 35.6400 },
+    { id: 'tzemach', name: 'צמח', lat: 32.7100, lon: 35.5900 },
+    { id: 'tzinbari', name: 'צינברי', lat: 32.7400, lon: 35.5700 },
+    { id: 'beriniki', name: 'ברניקי', lat: 32.7616, lon: 35.5579 },
+    { id: 'shikmim', name: 'שקמים', lat: 32.8680, lon: 35.5750 },
+    { id: 'hukuk-north', name: 'חוקוק צפון', lat: 32.8600, lon: 35.5400 },
+    { id: 'shizaf-rotem', name: 'שיזף-רותם', lat: 32.8002, lon: 35.6411 },
+    { id: 'hanion-haon', name: 'חניון האון', lat: 32.7660, lon: 35.6290 },
+    { id: 'hanion-yarden-kinneret', name: 'חניון ירדן כינרת', lat: 32.7060, lon: 35.5890 },
+    { id: 'the-diamond', name: 'הדאימונד', lat: 32.8346, lon: 35.6422 },
+    { id: 'shitaim', name: 'שיטים', lat: 32.7600, lon: 35.6400 },
+    { id: 'deganya', name: 'דגניה', lat: 32.7100, lon: 35.5800 },
+    { id: 'hadekel', name: 'הדקל', lat: 32.7670, lon: 35.5450 },
+    { id: 'gino', name: 'ג\'ינו', lat: 32.8800, lon: 35.5700 },
+    { id: 'sfirit', name: 'ספירית', lat: 32.8800, lon: 35.5800 },
+    { id: 'ein-gev-resort', name: 'נופש עין-גב', lat: 32.7830, lon: 35.6260 },
+    { id: 'haon-resort', name: 'נופש האון', lat: 32.7660, lon: 35.6290 },
+    { id: 'maagan-eden', name: 'מעגן עדן', lat: 32.7210, lon: 35.5990 },
+    { id: 'the-separated-beach', name: 'החוף הנפרד', lat: 32.8020, lon: 35.5480 },
+    { id: 'hamei-tiberias', name: 'חמי טבריה', lat: 32.7700, lon: 35.5500 },
+    { id: 'ganim', name: 'גנים', lat: 32.7800, lon: 35.5500 },
+    { id: 'sironit', name: 'סירונית', lat: 32.7930, lon: 35.5450 },
+    { id: 'gai', name: 'גיא', lat: 32.7800, lon: 35.5400 },
+    { id: 'gali-kinneret-rimonim', name: 'גלי כינרת רימונים', lat: 32.7859, lon: 35.5440 },
+    { id: 'the-promenade', name: 'הטיילת', lat: 32.7870, lon: 35.5390 },
+    { id: 'shket-leonardo', name: 'שקט לאונרדו', lat: 32.7985, lon: 35.5395 },
+    { id: 'hatekhelet', name: 'התכלת', lat: 32.7950, lon: 35.5470 },
+    { id: 'raket', name: 'רקת (בורה בורה)', lat: 32.8000, lon: 35.5300 },
+    { id: 'green', name: 'גרין', lat: 32.8100, lon: 35.5300 },
+    { id: 'restel', name: 'רסטל', lat: 32.8200, lon: 35.5200 },
+    { id: 'nof-ginosar', name: 'נוף גינוסר', lat: 32.8444, lon: 35.5228 }
+];
+
 export default function UploadForm({ onUploadSuccess }) {
     const router = useRouter();
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
     const [description, setDescription] = useState("");
     const [location, setLocation] = useState("");
+    const [manualLocation, setManualLocation] = useState("");
     const [pollutionLevel, setPollutionLevel] = useState("Low");
+    const [isMapVisible, setIsMapVisible] = useState(false);
     const [progress, setProgress] = useState(0);
     const [isCameraActive, setIsCameraActive] = useState(false);
     const [coordinates, setCoordinates] = useState("");
     const [apiErrorMessage, setApiErrorMessage] = useState("");
     const [searchStatusMessage, setSearchStatusMessage] = useState("");
-    const [currentTheme, setCurrentTheme] = useState('light'); // Added new state for the theme
-
+    const [currentTheme, setCurrentTheme] = useState('light');
     const { dateInput, time } = getCurrentDateTime();
     const [dateValue, setDateValue] = useState(dateInput);
     const [timeValue, setTimeValue] = useState(time);
-
     const [fileInputKey, setFileInputKey] = useState(Date.now());
     const [currentUploadTask, setCurrentUploadTask] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
-
     const [successMessage, setSuccessMessage] = useState("");
-
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const videoStreamRef = useRef(null);
 
-    const GEOAPIFY_API_KEY = "798aff4296834f94ae8593ec7f2146b5";
+    const LOCATIONIQ_API_KEY = process.env.LOCATIONIQ_API_KEY;
 
-    // Added new useEffect to monitor theme changes
     useEffect(() => {
         const observer = new MutationObserver(() => {
             const newTheme = document.documentElement.className;
@@ -118,10 +166,7 @@ export default function UploadForm({ onUploadSuccess }) {
             };
 
             try {
-                console.log(`Original file size: ${(f.size / 1024 / 1024).toFixed(2)} MB`);
                 const compressedFile = await imageCompression(f, options);
-                console.log(`Compressed file size: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
-
                 setFile(compressedFile);
                 const reader = new FileReader();
                 reader.onloadend = () => {
@@ -141,10 +186,28 @@ export default function UploadForm({ onUploadSuccess }) {
         }
     };
 
+    // Function to load the form's state from local storage
+    const loadFormState = () => {
+        const storedState = localStorage.getItem('uploadFormState');
+        if (storedState) {
+            const state = JSON.parse(storedState);
+            setDescription(state.description || "");
+            setLocation(state.location || "");
+            setManualLocation(state.manualLocation || "");
+            setPollutionLevel(state.pollutionLevel || "Low");
+            setDateValue(state.dateValue || getCurrentDateTime().dateInput);
+            setTimeValue(state.timeValue || getCurrentDateTime().time);
+            setCoordinates(state.coordinates || "");
+            setPreview(state.preview || null);
+        }
+    };
+
+    // Function to save the form's state to local storage
     const saveFormState = () => {
         const state = {
             description,
             location,
+            manualLocation,
             pollutionLevel,
             dateValue,
             timeValue,
@@ -154,34 +217,34 @@ export default function UploadForm({ onUploadSuccess }) {
         localStorage.setItem('uploadFormState', JSON.stringify(state));
     };
 
-    const loadFormState = () => {
-        const storedState = localStorage.getItem('uploadFormState');
-        if (storedState) {
-            const state = JSON.parse(storedState);
-            setDescription(state.description || "");
-            setLocation(state.location || "");
-            setPollutionLevel(state.pollutionLevel || "Low");
-            setDateValue(state.dateValue || getCurrentDateTime().dateInput);
-            setTimeValue(state.timeValue || getCurrentDateTime().time);
-            setCoordinates(state.coordinates || "");
-            setPreview(state.preview || null);
-        }
-    };
 
+    // UseEffect to load the state when the component first mounts
     useEffect(() => {
         loadFormState();
     }, []);
 
+    // UseEffect to save the state whenever a relevant state variable changes
     useEffect(() => {
         saveFormState();
-    }, [description, location, pollutionLevel, dateValue, timeValue, coordinates, preview]);
+    }, [description, location, manualLocation, pollutionLevel, dateValue, timeValue, coordinates, preview]);
+
+
+    const showOnMap = () => {
+        saveFormState();
+        const locationNameForMap = manualLocation || galileeBeaches.find(b => b.id === location)?.name || "";
+        if (coordinates && coordinates.trim() !== "Coordinates not found" && coordinates.trim() !== "Error converting address" && coordinates.trim() !== "Error getting real-time coordinates") {
+            const { lat, lon } = getCoords(coordinates);
+            setIsMapVisible(true);
+        } else {
+            setSearchStatusMessage("Please find coordinates before showing on map.");
+        }
+    };
 
     const setCurrentDateTime = () => {
         const { dateInput, time } = getCurrentDateTime();
         setDateValue(dateInput);
         setTimeValue(time);
     };
-
 
     const handleCancelPreview = () => {
         setFile(null);
@@ -235,10 +298,9 @@ export default function UploadForm({ onUploadSuccess }) {
             return;
         }
 
-        setIsCameraActive(true); // make sure <video> renders first
+        setIsCameraActive(true);
 
         try {
-            // small delay to ensure video element is rendered
             await new Promise(resolve => setTimeout(resolve, 100));
 
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -279,45 +341,6 @@ export default function UploadForm({ onUploadSuccess }) {
         }, "image/jpeg");
     };
 
-    const handleLocationChange = (e) => {
-        const newLocation = e.target.value;
-        setLocation(newLocation);
-    };
-
-    const onSearchLocation = () => {
-        if (location.trim() === "") {
-            setSearchStatusMessage("Please enter a location to search.");
-            return;
-        }
-        setSearchStatusMessage("Searching for coordinates...");
-        geocodeAddress(location, GEOAPIFY_API_KEY).then((data) => {
-            if (data) {
-                setSearchStatusMessage("Coordinates updated.");
-                const { street, housenumber, city, postcode, lat, lon } = data;
-                const newLocation = `${street || ''} ${housenumber || ''}, ${city || ''}, ${postcode || ''}`.trim().replace(/^,/, '').trim();
-                setLocation(newLocation || location);
-                setCoordinates(`Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)}`);
-            } else {
-                setSearchStatusMessage("Error finding coordinates.");
-            }
-        }).catch(() => {
-            setSearchStatusMessage("Error finding coordinates.");
-        });
-    };
-
-    const hebrewToEnglishMap = {
-        'א': 'a', 'ב': 'b', 'ג': 'g', 'ד': 'd', 'ה': 'h', 'ו': 'v', 'ז': 'z', 'ח': 'kh', 'ט': 't', 'י': 'y', 'כ': 'kh', 'ך': 'kh', 'ל': 'l', 'מ': 'm', 'ם': 'm', 'נ': 'n', 'ן': 'n', 'ס': 's', 'ע': 'a', 'פ': 'p', 'ף': 'p', 'צ': 'ts', 'ץ': 'ts', 'ק': 'k', 'ר': 'r', 'ש': 'sh', 'ת': 't',
-        ' ': ' '
-    };
-
-    const transliterateHebrew = (text) => {
-        if (!text) return '';
-        let result = '';
-        for (const char of text) {
-            result += hebrewToEnglishMap[char] || char;
-        }
-        return result;
-    };
 
     const handleAutoLocation = () => {
         setApiErrorMessage("");
@@ -328,33 +351,30 @@ export default function UploadForm({ onUploadSuccess }) {
                 setCoordinates(`Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`);
 
                 try {
-                    const response = await fetch(`https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&lang=en&apiKey=${GEOAPIFY_API_KEY}`);
+                    const response = await fetch(`https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_API_KEY}&lat=${latitude}&lon=${longitude}&format=json`);
                     const data = await response.json();
-                    if (data.features && data.features.length > 0) {
-                        const properties = data.features[0].properties;
 
-                        let street = properties.street || '';
-                        let city = properties.city || '';
-                        const postcode = properties.postcode || '';
-
-                        street = transliterateHebrew(street);
-                        city = transliterateHebrew(city);
-
+                    if (data.address) {
+                        const address = data.address;
+                        let street = address.road || '';
+                        let city = address.city || address.town || address.village || '';
+                        const postcode = address.postcode || '';
                         const addressParts = [];
+
                         if (street) addressParts.push(street);
                         if (city) addressParts.push(city);
                         if (postcode) addressParts.push(postcode);
 
-                        const newLocation = addressParts.join(', ').trim();
-                        setLocation(newLocation || "Unknown Location");
+                        const newLocationName = addressParts.join(', ').trim();
+                        setManualLocation(newLocationName || "Unknown Location");
                         setSearchStatusMessage("Location found!");
                     } else {
-                        setLocation("Unknown Location");
+                        setManualLocation("Unknown Location");
                         setSearchStatusMessage("Location name not found.");
                     }
                 } catch (err) {
                     console.error("Reverse geocoding error:", err);
-                    setLocation("Error getting location name");
+                    setManualLocation("Error getting location name");
                     setSearchStatusMessage("Error getting location name.");
                 }
             }, (error) => {
@@ -365,6 +385,36 @@ export default function UploadForm({ onUploadSuccess }) {
         } else {
             setSearchStatusMessage("Geolocation is not supported by your browser");
             setCoordinates("");
+        }
+    };
+
+    const onSearchLocation = async () => {
+        if (manualLocation.trim() === "") {
+            setSearchStatusMessage("Please enter a location to search.");
+            return;
+        }
+        setSearchStatusMessage("Searching for coordinates...");
+
+        const searchAddress = manualLocation;
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchAddress)}&format=json&bounded=1&viewbox=35.5,32.65,35.7,32.95`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.length > 0) {
+                const { lat, lon, display_name } = data[0];
+                setCoordinates(`Lat: ${parseFloat(lat).toFixed(5)}, Lon: ${parseFloat(lon).toFixed(5)}`);
+                setManualLocation(display_name);
+                setSearchStatusMessage("Location found!");
+            } else {
+                setSearchStatusMessage("No coordinates found for this location.");
+                setCoordinates("Coordinates not found");
+            }
+        } catch (err) {
+            console.error("Geocoding error:", err);
+            setSearchStatusMessage("Error finding coordinates. Please try again.");
+            setCoordinates("Error finding coordinates");
         }
     };
 
@@ -379,8 +429,11 @@ export default function UploadForm({ onUploadSuccess }) {
             alert("Please select a photo.");
             return;
         }
-        if (!location) {
-            alert("Location is a required field. Please enter a location or use the 'Auto' button.");
+
+        const locationToSave = manualLocation || galileeBeaches.find(beach => beach.id === location)?.name || "";
+
+        if (!locationToSave) {
+            alert("Location is a required field. Please select a beach or enter a location.");
             return;
         }
         if (!pollutionLevel) {
@@ -410,7 +463,7 @@ export default function UploadForm({ onUploadSuccess }) {
                     await addDoc(collection(db, "reports"), {
                         imageUrl: url,
                         description,
-                        location: location,
+                        location: locationToSave,
                         coordinates: coordinates,
                         pollution_level: pollutionLevel,
                         date: `${dateDisplay} ${time}`,
@@ -422,6 +475,7 @@ export default function UploadForm({ onUploadSuccess }) {
                     setPreview(null);
                     setDescription("");
                     setLocation("");
+                    setManualLocation("");
                     setPollutionLevel("Low");
                     setProgress(0);
                     setFileInputKey(Date.now());
@@ -454,18 +508,41 @@ export default function UploadForm({ onUploadSuccess }) {
         }
     };
 
-    const showOnMap = () => {
-        saveFormState();
-        if (coordinates && coordinates.trim() !== "Coordinates not found" && coordinates.trim() !== "Error converting address") {
-            const { lat, lon } = getCoords(coordinates);
-            router.push(`/pickedLocation?lat=${lat}&lon=${lon}&locationName=${encodeURIComponent(location)}`);
-        } else {
-            setSearchStatusMessage("Please find coordinates before showing on map.");
-        }
-    };
-
     return (
         <div className={`w-full backdrop-blur-sm rounded-3xl shadow-2xl p-6 ${currentTheme === 'dark' ? 'backdrop-dark text-white' : 'backdrop-light text-black'}`}>
+            {/* 🗺️ ADD THE MAP MODAL HERE 🗺️ */}
+            {isMapVisible && (
+                <div
+                    className="fixed inset-0 z-[999] bg-black/70 flex items-center justify-center p-4"
+                    onClick={() => setIsMapVisible(false)} // Click outside to close
+                >
+                    <div
+                        className="w-full max-w-4xl h-[70vh] rounded-2xl overflow-hidden shadow-2xl relative"
+                        onClick={(e) => e.stopPropagation()} // Prevent modal from closing when clicking inside
+                    >
+                        {/* Wrap the component that uses searchParams inside a Suspense boundary */}
+                        <Suspense fallback={<div>Loading map...</div>}>
+                            <PickedLocationMap
+                                lat={getCoords(coordinates).lat}
+                                lon={getCoords(coordinates).lon}
+                                locationName={manualLocation || galileeBeaches.find(b => b.id === location)?.name || ""}
+                            />
+                        </Suspense>
+
+                        <button
+                            onClick={() => setIsMapVisible(false)}
+                            className="absolute top-4 right-4 z-[1000] p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-200"
+                        >
+                            {/* Close button icon */}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            )}
+            {/* ------------------------------------------------------------ */}
+
             <h2 className="text-3xl font-bold mb-6">Upload Report</h2>
             <div className="space-y-4">
                 {isCameraActive ? (
@@ -559,39 +636,77 @@ export default function UploadForm({ onUploadSuccess }) {
                 )}
             </div>
             <div className="flex flex-col gap-3">
-                <div className="flex gap-2">
-                    <textarea
-                        placeholder="Location (Address, City, Zip Code)"
-                        className={`flex-1 border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white placeholder-gray-400' : 'bg-white/70 text-black placeholder-gray-500'}`}
+                <div className="flex flex-col gap-2">
+                    <select
                         value={location}
-                        onChange={handleLocationChange}
-                        rows="2"
-                    />
-                    <button
-                        type="button"
-                        className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
-                        onClick={handleAutoLocation}
+                        onChange={(e) => {
+                            const selectedValue = e.target.value;
+                            setLocation(selectedValue);
+
+                            const selectedBeach = galileeBeaches.find(beach => beach.id === selectedValue);
+                            if (selectedBeach) {
+                                setCoordinates(`Lat: ${selectedBeach.lat}, Lon: ${selectedBeach.lon}`);
+                                setSearchStatusMessage(`Coordinates for ${selectedBeach.name} updated.`);
+                            } else {
+                                setCoordinates("");
+                                setSearchStatusMessage("");
+                            }
+                        }}
+                        className={`w-full border rounded-lg p-2 focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark'
+                            ? 'bg-black/30 text-white'
+                            : 'bg-white/70 text-black'
+                            }`}
                     >
-                        Auto
-                    </button>
-                    <button
-                        type="button"
-                        className="px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm"
-                        onClick={onSearchLocation}
-                    >
-                        Search
-                    </button>
+                        <option value="">Select a Beach</option>
+                        {galileeBeaches.map((beach) => (
+                            <option key={beach.id} value={beach.id}>
+                                {beach.name}
+                            </option>
+                        ))}
+                    </select>
+
+                    <div className="flex gap-2 items-center">
+                        <textarea
+                            placeholder="Or Enter Location Manually (Address, City, Zip Code)"
+                            className={`flex-1 border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark'
+                                ? 'bg-black/30 text-white placeholder-gray-400'
+                                : 'bg-white/70 text-black placeholder-gray-500'
+                                }`}
+                            value={manualLocation}
+                            onChange={(e) => {
+                                setManualLocation(e.target.value); setLocation("");
+                                setCoordinates(""); // Clear previous coordinates too
+                                setApiErrorMessage(""); // Clear any previous error messages
+                            }}
+                            rows="2"
+                        />
+                        <button
+                            type="button"
+                            className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+                            onClick={handleAutoLocation}
+                        >
+                            Auto
+                        </button>
+                        <button
+                            type="button"
+                            className="px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm"
+                            onClick={() => onSearchLocation(manualLocation)}
+                        >
+                            Search
+                        </button>
+                    </div>
                 </div>
-                <textarea
-                    placeholder="Coordinates"
-                    className={`flex-1 border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white placeholder-gray-400' : 'bg-white/70 text-black placeholder-gray-500'}`}
-                    value={coordinates}
-                    readOnly={true}
-                    rows="1"
-                />
+
+                <div
+                    className={`flex-1 p-2 ${currentTheme === 'dark' ? 'text-white' : 'text-black'}`}
+                >
+                    {coordinates || "Coordinates will appear here"}
+                </div>
+
                 {searchStatusMessage && (
                     <p className={`text-sm text-center font-semibold ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-700'}`}>{searchStatusMessage}</p>
                 )}
+
                 {apiErrorMessage && (
                     <p className="text-red-500 text-sm text-center">{apiErrorMessage}</p>
                 )}

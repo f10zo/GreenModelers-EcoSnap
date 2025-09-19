@@ -77,8 +77,8 @@ const getCoords = (coordString) => {
 };
 
 const galileeBeaches = [
-    { id: 'amnion-bay', name: 'מפרץ אמנון', lat: 32.8911, lon: 35.5967 },
-    { id: 'kinneret', name: 'כינר', lat: 32.7935, lon: 35.5562 },
+    { id: 'amnion-bay', name: 'מפרץ אמנון', lat: 32.89112, lon: 35.596733 },
+    { id: 'kinneret', name: 'כינרת', lat: 32.7935, lon: 35.5562 },
     { id: 'duga', name: 'דוגה', lat: 32.8597, lon: 35.6473 },
     { id: 'dugit', name: 'דוגית', lat: 32.8499, lon: 35.6489 },
     { id: 'golan', name: 'גולן', lat: 32.8485, lon: 35.6496 },
@@ -88,7 +88,7 @@ const galileeBeaches = [
     { id: 'halukim', name: 'חלוקים', lat: 32.7980, lon: 35.6190 },
     { id: 'gofra', name: 'גופרה', lat: 32.8033, lon: 35.6436 },
     { id: 'susita', name: 'סוסיתא', lat: 32.7900, lon: 35.6400 },
-    { id: 'tzemach', name: 'צמח', lat: 32.7100, lon: 35.5900 },
+    { id: 'tzemach', name: 'צמח', lat: 32.7110, lon: 35.5800 },
     { id: 'tzinbari', name: 'צינברי', lat: 32.7400, lon: 35.5700 },
     { id: 'beriniki', name: 'ברניקי', lat: 32.7616, lon: 35.5579 },
     { id: 'shikmim', name: 'שקמים', lat: 32.8680, lon: 35.5750 },
@@ -119,6 +119,7 @@ const galileeBeaches = [
     { id: 'restel', name: 'רסטל', lat: 32.8200, lon: 35.5200 },
     { id: 'nof-ginosar', name: 'נוף גינוסר', lat: 32.8444, lon: 35.5228 }
 ];
+
 
 export default function UploadForm({ onUploadSuccess }) {
     const router = useRouter();
@@ -510,7 +511,6 @@ export default function UploadForm({ onUploadSuccess }) {
 
     return (
         <div className={`w-full backdrop-blur-sm rounded-3xl shadow-2xl p-6 ${currentTheme === 'dark' ? 'backdrop-dark text-white' : 'backdrop-light text-black'}`}>
-            {/* 🗺️ ADD THE MAP MODAL HERE 🗺️ */}
             {isMapVisible && (
                 <div
                     className="fixed inset-0 z-[999] bg-black/70 flex items-center justify-center p-4"
@@ -541,7 +541,6 @@ export default function UploadForm({ onUploadSuccess }) {
                     </div>
                 </div>
             )}
-            {/* ------------------------------------------------------------ */}
 
             <h2 className="text-3xl font-bold mb-6">Upload Report</h2>
             <div className="space-y-4">

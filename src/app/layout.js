@@ -18,13 +18,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
+      <body className="flex flex-col min-h-screen">
         <HomePageBackground>
           <Navbar />
           <main className="flex-grow p-4 sm:p-8">
             {children}
           </main>
-
           <footer className="bg-gray-800 text-white text-center p-4 bg-opacity-70 mt-auto">
             <p>© 2025 EcoSnap. All rights reserved.</p>
           </footer>

@@ -28,11 +28,10 @@ export default function InfoSection() {
   return (
     <div
       className={`w-full shadow-xl rounded-3xl p-4 overflow-y-auto border-2 transition-colors duration-500 ${currentTheme === "dark"
-          ? "bg-slate-800/90 text-white border-green-700"
-          : "bg-slate-100/90 text-black border-green-300"
+        ? "bg-slate-800/90 text-white border-green-700"
+        : "bg-slate-100/90 text-black border-green-300"
         }`}
     >
-      {/* ✅ This wrapper adds consistent spacing between paragraphs/sections */}
       <div className="space-y-4">
         <h3
           className={`text-2xl font-extrabold text-center transition-colors duration-500 ${currentTheme === "dark" ? "text-emerald-300" : "text-emerald-700"
@@ -54,14 +53,13 @@ export default function InfoSection() {
           Let&apos;s protect our vital natural resources together.
         </p>
 
-        {/* ✅ Links section keeps its own spacing */}
-        <div className="space-y-4">
-          {/* Report and Share Info */}
+        {/* ✅ Section for Report and Share Info */}
+        <div className="space-y-4 mt-6">
           <Link href="/report">
             <div
               className={`cursor-pointer rounded-2xl p-3 shadow-md transition-all duration-500 hover:scale-[1.02] ${currentTheme === "dark"
-                  ? "bg-gray-700 text-white"
-                  : "bg-white text-black"
+                ? "bg-gray-700 text-white"
+                : "bg-white text-black"
                 }`}
             >
               <h4
@@ -94,13 +92,58 @@ export default function InfoSection() {
               </p>
             </div>
           </Link>
+        </div>
 
-          {/* Volunteer for Cleanup */}
+        <div className="my-4"></div>
+
+        {/* ✅ Section for Add Campaigns */}
+        <div className="space-y-4 mt-6">
           <Link href="/Impact-Together">
             <div
               className={`cursor-pointer rounded-2xl p-3 shadow-md transition-all duration-500 hover:scale-[1.02] ${currentTheme === "dark"
-                  ? "bg-gray-700 text-white"
-                  : "bg-white text-black"
+                ? "bg-gray-700 text-white"
+                : "bg-white text-black"
+                }`}
+            >
+              <h4
+                className={`text-xl font-bold flex items-center gap-2 transition-colors duration-500 ${currentTheme === "dark" ? "text-sky-400" : "text-sky-600"
+                  }`}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.042 2.222A2.43 2.43 0 0 0 13.564 1a2.446 2.446 0 0 0-1.728.516l-.884.664a1.983 1.983 0 0 0-.66.66l-.664.884c-.394.524-.95 1.05-1.554 1.444A4.57 4.57 0 0 0 6.5 6.5C4.013 4.013 1.5 6.5 1.5 6.5v8c0 1.25.75 2 2 2h4.5v-2h-3v-4.5h3v-3.5h-1.5c-1.25 0-2 .75-2 2v2.5h1.5v-1.5h1.5v-1.5h1.5v-1.5h1.5v-1.5h-1.5v-1.5h1.5v-1.5h1.5v-1.5zM12 12a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"
+                  />
+                </svg>
+                Add Campaigns
+              </h4>
+              <p
+                className={`text-sm leading-relaxed transition-colors duration-500 ${currentTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}
+              >
+                Create and organize your own cleanup campaigns for others to join.
+              </p>
+            </div>
+          </Link>
+        </div>
+
+        <div className="my-4"></div>
+
+        {/* ✅ Section for Volunteer for Cleanup */}
+        <div className="space-y-4 mt-6">
+          <Link href="/published-campaigns">
+            <div
+              className={`cursor-pointer rounded-2xl p-3 shadow-md transition-all duration-500 hover:scale-[1.02] ${currentTheme === "dark"
+                ? "bg-gray-700 text-white"
+                : "bg-white text-black"
                 }`}
             >
               <h4
@@ -133,13 +176,17 @@ export default function InfoSection() {
               </p>
             </div>
           </Link>
+        </div>
 
-          {/* Contact Us */}
+        <div className="my-4"></div>
+
+        {/* ✅ Section for Contact Us */}
+        <div className="space-y-4 mt-6">
           <Link href="/contact-us">
             <div
               className={`cursor-pointer rounded-2xl p-3 shadow-md transition-all duration-500 hover:scale-[1.02] ${currentTheme === "dark"
-                  ? "bg-gray-700 text-white"
-                  : "bg-white text-black"
+                ? "bg-gray-700 text-white"
+                : "bg-white text-black"
                 }`}
             >
               <h4
@@ -173,6 +220,8 @@ export default function InfoSection() {
           </Link>
         </div>
 
+        <div className="my-4"></div>
+
         <p
           className={`text-lg italic font-semibold text-center transition-colors duration-500 ${currentTheme === "dark" ? "text-emerald-200" : "text-emerald-800"
             }`}
@@ -182,5 +231,4 @@ export default function InfoSection() {
       </div>
     </div>
   );
-
 }

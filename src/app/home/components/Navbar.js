@@ -27,17 +27,18 @@ export default function Navbar() {
           <Image
             src="/eco_logo_navy.png"
             alt="EcoSnap Logo"
-            width={70}
-            height={55}
-            className="lg:w-[90px] lg:h-[70px]"
+            width={65}
+            height={45}
+            className="lg:w-[70px] lg:h-[55px]"
           />
+
           {/* Desktop links */}
           <div className="hidden lg:flex items-center space-x-4">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className="bg-[#435875] text-white px-4 py-2 rounded-md text-sm lg:text-base transition duration-300 ease-in-out hover:bg-[#5a718e] shadow-md"
+                className="bg-[#435875] text-white px-4 py-1.5 rounded-md text-sm lg:text-base transition duration-300 ease-in-out hover:bg-[#5a718e] shadow-md"
               >
                 {link.name}
               </Link>
@@ -51,7 +52,7 @@ export default function Navbar() {
           <div className="hidden lg:block">
             <Link
               href={contactLink.href}
-              className="bg-[#435875] text-white px-4 py-2 rounded-md text-sm lg:text-base transition duration-300 ease-in-out hover:bg-[#5a718e] shadow-md"
+              className="bg-[#435875] text-white px-5 py-2 rounded-md text-sm lg:text-base transition duration-300 ease-in-out hover:bg-[#5a718e] shadow-md"
             >
               {contactLink.name}
             </Link>
@@ -78,7 +79,7 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className="bg-[#435875] text-white px-3 py-2 rounded-md text-base transition duration-300 ease-in-out hover:bg-[#5a718e] shadow-md text-center"
+                className="bg-[#435875] text-white px-3 py-1 rounded-md text-base transition duration-300 ease-in-out hover:bg-[#5a718e] shadow-md text-center"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {link.name}

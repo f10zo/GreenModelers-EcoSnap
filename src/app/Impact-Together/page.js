@@ -146,11 +146,7 @@ export default function PublishCampaignForm() {
       setSearchStatusMessage('Error finding coordinates. Try again.');
     }
   };
-
-  const [currentTheme, setCurrentTheme] = useState('light');
-  const [status, setStatus] = useState("");
-
-  // --- NEW STATE FOR IMAGE UPLOAD ---
+// --- NEW STATE FOR IMAGE UPLOAD ---
   const [imageFile, setImageFile] = useState(null);
 
   const handleImageChange = (e) => {
@@ -158,6 +154,12 @@ export default function PublishCampaignForm() {
         setImageFile(e.target.files[0]);
     }
   };
+
+
+  const [currentTheme, setCurrentTheme] = useState('light');
+  const [status, setStatus] = useState("");
+
+  
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -222,7 +224,6 @@ export default function PublishCampaignForm() {
       return;
     }
 
-    // --- NEW LOGIC TO UPLOAD IMAGE ---
     let imageURL = null;
     if (imageFile) {
         setStatus("Uploading image...");
@@ -238,14 +239,12 @@ export default function PublishCampaignForm() {
             return;
         }
     }
-    // --- END NEW LOGIC ---
 
     try {
       await addDoc(collection(db, "campaigns"), {
         ...formData,
         volunteersNeeded: Number(formData.volunteersNeeded),
         createdAt: serverTimestamp(),
-        // --- ADD THE IMAGE URL TO THE DOCUMENT ---
         imageUrl: imageURL,
       });
 

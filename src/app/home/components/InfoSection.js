@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -27,10 +27,16 @@ export default function InfoSection() {
 
   return (
     <div
-      className={`w-full shadow-xl rounded-3xl p-4 overflow-y-auto border-2 transition-colors duration-500 ${currentTheme === "dark"
-        ? "bg-slate-800/90 text-white border-green-700"
-        : "bg-slate-100/90 text-black border-green-300"
-        }`}
+      className="w-full rounded-3xl p-4 overflow-y-auto border-2 transition-colors duration-500"
+      style={{
+        backdropFilter: "blur(12px)", // stronger blur for outer container
+        backgroundColor:
+          currentTheme === "dark"
+            ? "rgba(15, 23, 42, 0.7)" // dark semi-transparent
+            : "rgba(255, 255, 255, 0.35)", // light semi-transparent
+        borderColor: currentTheme === "dark" ? "#22c55e" : "#4ade80",
+        color: currentTheme === "dark" ? "#fff" : "#000",
+      }}
     >
       <div className="space-y-4">
         <h3
@@ -50,17 +56,21 @@ export default function InfoSection() {
           >
             Every action helps!
           </strong>{" "}
-          Let&apos;s protect our vital natural resources together.
+          Let's protect our vital natural resources together.
         </p>
 
         {/* ✅ Section for Report and Share Info */}
         <div className="space-y-4 mt-6">
           <Link href="/report">
             <div
-              className={`cursor-pointer rounded-2xl p-3 shadow-md transition-all duration-500 hover:scale-[1.02] ${currentTheme === "dark"
-                ? "bg-gray-700 text-white"
-                : "bg-white text-black"
-                }`}
+              className={`cursor-pointer rounded-2xl p-3 shadow-md transition-all duration-500 hover:scale-[1.02]`}
+              style={{
+                backdropFilter: "blur(3px)", // slightly blurred inner cards
+                backgroundColor:
+                  currentTheme === "dark"
+                    ? "rgba(55, 65, 81, 0.85)"
+                    : "rgba(255, 255, 255, 0.8)",
+              }}
             >
               <h4
                 className={`text-xl font-bold flex items-center gap-2 transition-colors duration-500 ${currentTheme === "dark" ? "text-sky-400" : "text-sky-600"
@@ -94,16 +104,18 @@ export default function InfoSection() {
           </Link>
         </div>
 
-        <div className="my-4"></div>
-
         {/* ✅ Section for Add Campaigns */}
         <div className="space-y-4 mt-6">
-          <Link href="/Impact-Together">
+          <Link href="/campaign-form">
             <div
-              className={`cursor-pointer rounded-2xl p-3 shadow-md transition-all duration-500 hover:scale-[1.02] ${currentTheme === "dark"
-                ? "bg-gray-700 text-white"
-                : "bg-white text-black"
-                }`}
+              className={`cursor-pointer rounded-2xl p-3 shadow-md transition-all duration-500 hover:scale-[1.02]`}
+              style={{
+                backdropFilter: "blur(3px)",
+                backgroundColor:
+                  currentTheme === "dark"
+                    ? "rgba(55, 65, 81, 0.85)"
+                    : "rgba(255, 255, 255, 0.8)",
+              }}
             >
               <h4
                 className={`text-xl font-bold flex items-center gap-2 transition-colors duration-500 ${currentTheme === "dark" ? "text-sky-400" : "text-sky-600"
@@ -135,35 +147,24 @@ export default function InfoSection() {
           </Link>
         </div>
 
-        <div className="my-4"></div>
-
-        {/* ✅ Section for Volunteer for Cleanup */}
+        {/* Repeat same style for other inner sections */}
+        {/* Volunteer for Cleanup */}
         <div className="space-y-4 mt-6">
           <Link href="/published-campaigns">
             <div
-              className={`cursor-pointer rounded-2xl p-3 shadow-md transition-all duration-500 hover:scale-[1.02] ${currentTheme === "dark"
-                ? "bg-gray-700 text-white"
-                : "bg-white text-black"
-                }`}
+              className={`cursor-pointer rounded-2xl p-3 shadow-md transition-all duration-500 hover:scale-[1.02]`}
+              style={{
+                backdropFilter: "blur(3px)",
+                backgroundColor:
+                  currentTheme === "dark"
+                    ? "rgba(55, 65, 81, 0.85)"
+                    : "rgba(255, 255, 255, 0.8)",
+              }}
             >
               <h4
                 className={`text-xl font-bold flex items-center gap-2 transition-colors duration-500 ${currentTheme === "dark" ? "text-sky-400" : "text-sky-600"
                   }`}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                  stroke="currentColor"
-                  className="w-5 h-5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.042 2.222A2.43 2.43 0 0 0 13.564 1a2.446 2.446 0 0 0-1.728.516l-.884.664a1.983 1.983 0 0 0-.66.66l-.664.884c-.394.524-.95 1.05-1.554 1.444A4.57 4.57 0 0 0 6.5 6.5C4.013 4.013 1.5 6.5 1.5 6.5v8c0 1.25.75 2 2 2h4.5v-2h-3v-4.5h3v-3.5h-1.5c-1.25 0-2 .75-2 2v2.5h1.5v-1.5h1.5v-1.5h1.5v-1.5h1.5v-1.5h-1.5v-1.5h1.5v-1.5h1.5v-1.5zM12 12a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"
-                  />
-                </svg>
                 Volunteer for Cleanup
               </h4>
               <p
@@ -171,56 +172,40 @@ export default function InfoSection() {
                   }`}
               >
                 Join local <strong>cleanup groups</strong> to make a{" "}
-                <strong>tangible difference</strong> in the health of our
-                environment.
+                <strong>tangible difference</strong> in the health of our environment.
               </p>
             </div>
           </Link>
         </div>
 
-        <div className="my-4"></div>
-
-        {/* ✅ Section for Contact Us */}
+        {/* Contact Us */}
         <div className="space-y-4 mt-6">
           <Link href="/contact-us">
             <div
-              className={`cursor-pointer rounded-2xl p-3 shadow-md transition-all duration-500 hover:scale-[1.02] ${currentTheme === "dark"
-                ? "bg-gray-700 text-white"
-                : "bg-white text-black"
-                }`}
+              className={`cursor-pointer rounded-2xl p-3 shadow-md transition-all duration-500 hover:scale-[1.02]`}
+              style={{
+                backdropFilter: "blur(3px)",
+                backgroundColor:
+                  currentTheme === "dark"
+                    ? "rgba(55, 65, 81, 0.85)"
+                    : "rgba(255, 255, 255, 0.8)",
+              }}
             >
               <h4
                 className={`text-xl font-bold flex items-center gap-2 transition-colors duration-500 ${currentTheme === "dark" ? "text-sky-400" : "text-sky-600"
                   }`}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                  stroke="currentColor"
-                  className="w-5 h-5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.5a2.25 2.25 0 0 1-2.36 0l-7.5-4.5a2.25 2.25 0 0 1-1.07-1.916V6.75"
-                  />
-                </svg>
                 Contact Us
               </h4>
               <p
                 className={`text-sm leading-relaxed transition-colors duration-500 ${currentTheme === "dark" ? "text-gray-400" : "text-gray-600"
                   }`}
               >
-                Have questions, feedback, or ideas? Reach out to our team — we&apos;d
-                love to hear from you!
+                Have questions, feedback, or ideas? Reach out to our team — we'd love to hear from you!
               </p>
             </div>
           </Link>
         </div>
-
-        <div className="my-4"></div>
 
         <p
           className={`text-lg italic font-semibold text-center transition-colors duration-500 ${currentTheme === "dark" ? "text-emerald-200" : "text-emerald-800"

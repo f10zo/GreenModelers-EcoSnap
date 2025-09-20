@@ -3,71 +3,94 @@
 import React, { useState, useEffect } from "react";
 
 export default function AboutPage() {
-    const [currentTheme, setCurrentTheme] = useState('light');
+    const [currentTheme, setCurrentTheme] = useState("light");
 
-    // Watch <html> theme changes
     useEffect(() => {
+        const savedTheme = localStorage.getItem("theme");
+        const htmlClass = document.documentElement.className;
+        setCurrentTheme(savedTheme || htmlClass || "light");
+
         const observer = new MutationObserver(() => {
-            const newTheme = document.documentElement.className;
-            setCurrentTheme(newTheme);
+            setCurrentTheme(document.documentElement.className);
         });
-        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
+
         return () => observer.disconnect();
     }, []);
 
-    const isDarkMode = currentTheme.includes('dark');
+    const isDarkMode = currentTheme.includes("dark");
+
+    const headerBgClass = `w-full rounded-3xl p-8 mb-6 backdrop-blur-sm transition-colors duration-500 ${
+        isDarkMode ? "bg-gray-800/60 text-white" : "bg-white/50 text-gray-800"
+    }`;
+
+    const sectionClass = `w-full shadow-xl rounded-3xl p-6 mb-4 transition-colors duration-500 ${
+        isDarkMode
+            ? "bg-gray-800/70 text-white border border-gray-700"
+            : "bg-white/50 text-gray-800 border border-gray-300"
+    }`;
+
+    const headingClass = `text-2xl sm:text-2xl font-extrabold mb-2 transition-colors duration-500 ${
+        isDarkMode ? "text-white" : "text-gray-800"
+    }`;
+
+    const paragraphClass = `text-lg font-bold transition-colors duration-500 ${
+        isDarkMode ? "text-white" : "text-gray-800"
+    }`;
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4">
-            {/* Main content container */}
-            <div className={`backdrop-blur-sm shadow-2xl rounded-3xl p-8 max-w-7xl mx-auto text-center transition-colors duration-500 ${isDarkMode ? 'bg-gray-800/60 text-white' : 'bg-white/30 text-black'}`}>
-
-                {/* Title Section */}
-                <h1 className={`text-4xl font-extrabold mb-8 transition-colors duration-500 ${isDarkMode ? 'text-white-300' : 'text-white-700'}`}>About Our Project</h1>
-
-                {/* Two-column layout for Mission and Image */}
-                <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-
-                    {/* Mission Text Column */}
-                    <div className="md:w-1/2 text-left">
-
-                        {/* Mission Section with Icon */}
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="text-3xl p-2 rounded-full bg-green-500 text-white">🎯</div>
-                            <h2 className="text-3xl font-bold">Our Mission</h2>
-                        </div>
-                        <p className="text-xl font-semibold mb-4">
-                            This project protects the Sea of Galilee by empowering local communities to report pollution and share information. We aim to foster a cleaner environment for everyone.
-                        </p>
-
-                        {/* Vision Section with Icon */}
-                        <div className="flex items-center gap-4 mt-8 mb-4">
-                            <div className="text-3xl p-2 rounded-full bg-blue-500 text-white">🌟</div>
-                            <h2 className="text-3xl font-bold">Our Vision</h2>
-                        </div>
-                        <p className="text-xl font-semibold mb-4">
-                            We envision a future where community-led action drives proactive conservation, demonstrating how technology and collaboration lead to lasting change.
-                        </p>
-                    </div>
-
-                    {/* Image Column */}
-                    <div className="md:w-1/2 flex justify-center items-center">
-                        <img src="/kin1.png" alt="Our Mission" className="rounded-lg shadow-md" />
-                    </div>
-
+        <div className="flex flex-col items-center justify-between min-h-screen pt-2 pb-2 px-4">
+            <div className="max-w-4xl w-full">
+                {/* Page Header */}
+                <div className={headerBgClass}>
+                    <h1 className="text-4xl font-extrabold text-center">About Our Project</h1>
                 </div>
 
-                {/* How to Help Section */}
-                <div className="mt-8">
-                    <div className="flex items-center justify-center gap-4 mb-4">
-                        <div className="text-3xl p-2 rounded-full bg-yellow-500 text-white">🤝</div>
-                        <h2 className="text-3xl font-bold">How You Can Help</h2>
+                {/* Sections */}
+                <div className="space-y-4">
+                    {/* Mission */}
+                    <div className={sectionClass}>
+                        <div className="flex items-start gap-3">
+                            <div className="text-3xl p-2 rounded-full">🎯</div>
+                            <div>
+                                <h2 className={headingClass}>Our Mission</h2>
+                                <p className={paragraphClass}>
+                                    This project protects the Sea of Galilee by empowering local communities to report pollution and share information. We aim to foster a cleaner environment for everyone.
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                    <p className="mt-4 text-xl font-medium">
-                        You can contribute by uploading reports and volunteering for cleanup efforts. Your participation is vital to our success.
-                    </p>
-                </div>
 
+                    {/* Vision */}
+                    <div className={sectionClass}>
+                        <div className="flex items-start gap-3">
+                            <div className="text-3xl p-2 rounded-full">🌟</div>
+                            <div>
+                                <h2 className={headingClass}>Our Vision</h2>
+                                <p className={paragraphClass}>
+                                    We envision a future where community-led action drives proactive conservation, demonstrating how technology and collaboration lead to lasting change.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* How to Help */}
+                    <div className={sectionClass}>
+                        <div className="flex items-start gap-3">
+                            <div className="text-3xl p-2 rounded-full">🤝</div>
+                            <div>
+                                <h2 className={headingClass}>How You Can Help</h2>
+                                <p className={paragraphClass}>
+                                    You can contribute by uploading reports and volunteering for cleanup efforts. Your participation is vital to our success.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

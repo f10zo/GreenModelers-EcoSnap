@@ -149,6 +149,9 @@ export default function UploadForm({ onUploadSuccess }) {
 
     const LOCATIONIQ_API_KEY = process.env.LOCATIONIQ_API_KEY;
 
+    const [status, setStatus] = useState("");
+
+
     useEffect(() => {
         const observer = new MutationObserver(() => {
             const newTheme = document.documentElement.className;
@@ -508,140 +511,127 @@ export default function UploadForm({ onUploadSuccess }) {
             setFileInputKey(Date.now());
         }
     };
+    const isDarkMode = currentTheme.includes('dark');
 
     return (
-        <div className={`w-full backdrop-blur-sm rounded-3xl shadow-2xl p-6 ${currentTheme === 'dark' ? 'backdrop-dark text-white' : 'backdrop-light text-black'}`}>
-            {isMapVisible && (
-                <div
-                    className="fixed inset-0 z-[999] bg-black/70 flex items-center justify-center p-4"
-                    onClick={() => setIsMapVisible(false)} // Click outside to close
-                >
-                    <div
-                        className="w-full max-w-4xl h-[70vh] rounded-2xl overflow-hidden shadow-2xl relative"
-                        onClick={(e) => e.stopPropagation()} // Prevent modal from closing when clicking inside
-                    >
-                        {/* Wrap the component that uses searchParams inside a Suspense boundary */}
-                        <Suspense fallback={<div>Loading map...</div>}>
-                            <PickedLocationMap
-                                lat={getCoords(coordinates).lat}
-                                lon={getCoords(coordinates).lon}
-                                locationName={manualLocation || galileeBeaches.find(b => b.id === location)?.name || ""}
-                            />
-                        </Suspense>
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className={`w-full max-w-4xl rounded-2xl shadow-2xl p-6 relative backdrop-blur-sm transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/50 text-white' : 'bg-white/70 text-black'}`}>
 
+                {/* Map Modal */}
+                {isMapVisible && (
+                    <Suspense fallback={<div>Loading map...</div>}>
+                        <PickedLocationMap
+                            lat={getCoords(coordinates).lat}
+                            lon={getCoords(coordinates).lon}
+                            locationName={manualLocation || galileeBeaches.find(b => b.id === location)?.name || ""}
+                        />
                         <button
                             onClick={() => setIsMapVisible(false)}
                             className="absolute top-4 right-4 z-[1000] p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-200"
                         >
-                            {/* Close button icon */}
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
-                    </div>
-                </div>
-            )}
-
-            <h2 className="text-3xl font-bold mb-6">Upload Report</h2>
-            <div className="space-y-4">
-                {isCameraActive ? (
-                    <div className="flex flex-col items-center w-full max-w-md mx-auto">
-                        <video
-                            ref={videoRef}
-                            className="w-full rounded-lg mb-4"
-                            autoPlay
-                            playsInline
-                        ></video>
-                        <div className="flex gap-2 w-full">
-                            <button
-                                onClick={() => setIsCameraActive(false)}
-                                className="flex-1 py-2 px-4 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors duration-200"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleCapturePhoto}
-                                className="flex-1 py-2 px-4 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors duration-200"
-                            >
-                                <FiCamera className="inline-block mr-2" /> Take Photo
-                            </button>
-                        </div>
-                    </div>
-                ) : (
-                    <>
-                        <div
-                            className={`relative flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-4 ${currentTheme === 'dark' ? 'bg-black/30 border-gray-600' : 'bg-white/70 border-gray-300'} ${isDragging ? "border-blue-500 bg-blue-100" : ""}`}
-                            onDragOver={handleDragOver}
-                            onDragLeave={handleDragLeave}
-                            onDrop={handleDrop}
-                        >
-                            <FiUpload className={`w-8 h-8 ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                            <p className={`text-sm ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Drag and drop a photo here,</p>
-                            <p className={`text-sm ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>or click to choose one.</p>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => handleFileChange(e.target.files[0])}
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                key={fileInputKey}
-                            />
-                        </div>
-                        <div className="flex gap-2 justify-center mt-2 w-full max-w-md mx-auto">
-                            <button
-                                onClick={() => document.querySelector('input[type="file"]').click()}
-                                className="flex-1 py-2 px-4 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors duration-200"
-                            >
-                                Choose Photo
-                            </button>
-                            <button
-                                onClick={startCamera}
-                                className="flex-1 py-2 px-4 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors duration-200"
-                            >
-                                <FiCamera className="inline-block mr-2" /> Take Photo
-                            </button>
-                        </div>
-                    </>
+                    </Suspense>
                 )}
 
+                {/* Header */}
+                <h2 className={`text-3xl font-bold mb-6 text-center ${currentTheme.includes('dark') ? 'text-white' : 'text-gray-800'}`}>
+                    Upload Report
+                </h2>
 
-                <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
-                {preview && (
-                    <div className="relative border rounded-lg overflow-hidden">
-                        <Image
-                            src={preview}
-                            alt="preview"
-                            width={600}
-                            height={400}
-                            className="w-full h-auto object-cover"
-                        />
-                        <button
-                            onClick={handleCancelPreview}
-                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full transition-colors duration-200"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
+                {/* Camera / Upload Section */}
+                <div className="space-y-4">
+                    {isCameraActive ? (
+                        <div className="flex flex-col items-center w-full max-w-md mx-auto">
+                            <video
+                                ref={videoRef}
+                                className="w-full rounded-lg mb-4"
+                                autoPlay
+                                playsInline
+                            ></video>
+                            <div className="flex gap-2 w-full">
+                                <button
+                                    onClick={() => setIsCameraActive(false)}
+                                    className="flex-1 py-2 px-4 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors duration-200"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleCapturePhoto}
+                                    className="flex-1 py-2 px-4 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors duration-200"
+                                >
+                                    <FiCamera className="inline-block mr-2" /> Take Photo
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            <div
+                                className={`relative flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-4 ${currentTheme === 'dark' ? 'bg-black/30 border-gray-600' : 'bg-white/50 border-gray-300'} ${isDragging ? "border-blue-500 bg-blue-100" : ""}`}
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
                             >
-                                <path
-                                    fillRule="evenodd"
-                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                    clipRule="evenodd"
+                                <FiUpload className={`w-8 h-8 ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                                <p className={`text-sm ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Drag and drop a photo here,</p>
+                                <p className={`text-sm ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>or click to choose one.</p>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => handleFileChange(e.target.files[0])}
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    key={fileInputKey}
                                 />
-                            </svg>
-                        </button>
-                    </div>
-                )}
-            </div>
-            <div className="flex flex-col gap-3">
-                <div className="flex flex-col gap-2">
+                            </div>
+                            <div className="flex gap-2 justify-center mt-2 w-full max-w-md mx-auto">
+                                <button
+                                    onClick={() => document.querySelector('input[type="file"]').click()}
+                                    className="flex-1 py-2 px-4 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors duration-200"
+                                >
+                                    Choose Photo
+                                </button>
+                                <button
+                                    onClick={startCamera}
+                                    className="flex-1 py-2 px-4 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors duration-200"
+                                >
+                                    <FiCamera className="inline-block mr-2" /> Take Photo
+                                </button>
+                            </div>
+                        </>
+                    )}
+
+                    <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
+                    {preview && (
+                        <div className="relative border rounded-lg overflow-hidden">
+                            <Image
+                                src={preview}
+                                alt="preview"
+                                width={600}
+                                height={400}
+                                className="w-full h-auto object-cover"
+                            />
+                            <button
+                                onClick={handleCancelPreview}
+                                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Location selection, date/time, urgency, description */}
+                <div className="flex flex-col gap-3 mt-4">
+                    {/* Location & manual input */}
                     <select
                         value={location}
                         onChange={(e) => {
                             const selectedValue = e.target.value;
                             setLocation(selectedValue);
-
                             const selectedBeach = galileeBeaches.find(beach => beach.id === selectedValue);
                             if (selectedBeach) {
                                 setCoordinates(`Lat: ${selectedBeach.lat}, Lon: ${selectedBeach.lon}`);
@@ -651,154 +641,94 @@ export default function UploadForm({ onUploadSuccess }) {
                                 setSearchStatusMessage("");
                             }
                         }}
-                        className={`w-full border rounded-lg p-2 focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark'
-                            ? 'bg-black/30 text-white'
-                            : 'bg-white/70 text-black'
-                            }`}
+                        className={`w-full border rounded-lg p-2 focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`}
                     >
                         <option value="">Select a Beach</option>
                         {galileeBeaches.map((beach) => (
-                            <option key={beach.id} value={beach.id}>
-                                {beach.name}
-                            </option>
+                            <option key={beach.id} value={beach.id}>{beach.name}</option>
                         ))}
                     </select>
 
                     <div className="flex gap-2 items-center">
                         <textarea
                             placeholder="Or Enter Location Manually (Address, City, Zip Code)"
-                            className={`flex-1 border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark'
-                                ? 'bg-black/30 text-white placeholder-gray-400'
-                                : 'bg-white/70 text-black placeholder-gray-500'
-                                }`}
+                            className={`flex-1 border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white placeholder-gray-400' : 'bg-white/70 text-black placeholder-gray-500'}`}
                             value={manualLocation}
-                            onChange={(e) => {
-                                setManualLocation(e.target.value); setLocation("");
-                                setCoordinates(""); // Clear previous coordinates too
-                                setApiErrorMessage(""); // Clear any previous error messages
-                            }}
+                            onChange={(e) => { setManualLocation(e.target.value); setLocation(""); setCoordinates(""); setApiErrorMessage(""); }}
                             rows="2"
                         />
-                        <button
-                            type="button"
-                            className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
-                            onClick={handleAutoLocation}
-                        >
-                            Auto
-                        </button>
-                        <button
-                            type="button"
-                            className="px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm"
-                            onClick={() => onSearchLocation(manualLocation)}
-                        >
-                            Search
-                        </button>
+                        <button onClick={handleAutoLocation} className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">Auto</button>
+                        <button onClick={() => onSearchLocation(manualLocation)} className="px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm">Search</button>
                     </div>
-                </div>
 
-                <div
-                    className={`flex-1 p-2 ${currentTheme === 'dark' ? 'text-white' : 'text-black'}`}
-                >
-                    {coordinates || "Coordinates will appear here"}
-                </div>
+                    <div className={`flex-1 p-2 ${currentTheme === 'dark' ? 'text-white' : 'text-black'}`}>
+                        {coordinates || "Coordinates will appear here"}
+                    </div>
+                    {searchStatusMessage && <p className={`text-sm text-center font-semibold ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-700'}`}>{searchStatusMessage}</p>}
+                    {apiErrorMessage && <p className="text-red-500 text-sm text-center">{apiErrorMessage}</p>}
 
-                {searchStatusMessage && (
-                    <p className={`text-sm text-center font-semibold ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-700'}`}>{searchStatusMessage}</p>
-                )}
-
-                {apiErrorMessage && (
-                    <p className="text-red-500 text-sm text-center">{apiErrorMessage}</p>
-                )}
-                <button
-                    type="button"
-                    className="w-full py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 font-semibold transition-colors duration-200"
-                    onClick={showOnMap}
-                >
-                    Show on Map 🗺️
-                </button>
-                <div className="flex gap-2 items-center text-sm">
-                    <label className="font-semibold">Date:</label>
-                    <input
-                        type="date"
-                        className={`border rounded-lg p-1 flex-1 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`}
-                        value={dateValue}
-                        onChange={(e) => setDateValue(e.target.value)}
-                    />
-                    <input
-                        type="time"
-                        className={`border rounded-lg p-1 flex-1 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`}
-                        value={timeValue}
-                        onChange={(e) => setTimeValue(e.target.value)}
-                    />
-                    <button
-                        type="button"
-                        className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm"
-                        onClick={setCurrentDateTime}
-                    >
-                        Now
+                    <button onClick={showOnMap} className="w-full py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 font-semibold transition-colors duration-200">
+                        Show on Map 🗺️
                     </button>
-                </div>
 
-                <label className="font-semibold block mt-2 text-lg">Select the Urgency of this Report:</label>
-                <div className="flex gap-2">
-                    {["Low", "Medium", "High"].map((level) => {
-                        const colors = {
-                            Low: "bg-green-400 text-green-900",
-                            Medium: "bg-yellow-400 text-yellow-900",
-                            High: "bg-red-400 text-red-900"
-                        };
-                        const selectedColors = {
-                            Low: "bg-green-600 text-white",
-                            Medium: "bg-yellow-600 text-black",
-                            High: "bg-red-600 text-white"
-                        };
-                        return (
-                            <button
-                                key={level}
-                                className={`flex-1 py-2 rounded-lg font-semibold transition-all duration-200 ${pollutionLevel === level ? selectedColors[level] : colors[level]
-                                    }`}
-                                onClick={() => setPollutionLevel(level)}
-                            >
-                                {level}
+                    {/* Date & Time */}
+                    <div className="flex gap-2 items-center text-sm">
+                        <label className="font-semibold">Date:</label>
+                        <input type="date" className={`border rounded-lg p-1 flex-1 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`} value={dateValue} onChange={(e) => setDateValue(e.target.value)} />
+                        <input type="time" className={`border rounded-lg p-1 flex-1 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`} value={timeValue} onChange={(e) => setTimeValue(e.target.value)} />
+                        <button type="button" className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm" onClick={setCurrentDateTime}>Now</button>
+                    </div>
+
+                    {/* Urgency */}
+                    <label className="font-semibold block mt-2 text-lg">Select the Urgency of this Report:</label>
+                    <div className="flex gap-2">
+                        {["Low", "Medium", "High"].map((level) => {
+                            const colors = { Low: "bg-green-400 text-green-900", Medium: "bg-yellow-400 text-yellow-900", High: "bg-red-400 text-red-900" };
+                            const selectedColors = { Low: "bg-green-600 text-white", Medium: "bg-yellow-600 text-black", High: "bg-red-600 text-white" };
+                            return (
+                                <button
+                                    key={level}
+                                    className={`flex-1 py-2 rounded-lg font-semibold transition-all duration-200 ${pollutionLevel === level ? selectedColors[level] : colors[level]}`}
+                                    onClick={() => setPollutionLevel(level)}
+                                >
+                                    {level}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Description */}
+                    <textarea
+                        placeholder="Description"
+                        className={`w-full border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white placeholder-gray-400' : 'bg-white/70 text-black placeholder-gray-500'}`}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                    />
+
+                    {/* Progress & Submit */}
+                    {progress > 0 && (
+                        <div className="flex items-center gap-3">
+                            <div className="flex-1 w-full bg-gray-200 rounded-full h-3">
+                                <div className="bg-green-600 h-3 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                            </div>
+                            <button onClick={handleCancel} className="bg-red-500 text-white text-sm px-3 py-1 rounded-lg hover:bg-red-600 font-semibold transition-colors duration-200">
+                                Cancel
                             </button>
-                        );
-                    })}
-                </div>
-                <textarea
-                    placeholder="Description"
-                    className={`w-full border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white placeholder-gray-400' : 'bg-white/70 text-black placeholder-gray-500'}`}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                />
-            </div>
-            {progress > 0 && (
-                <div className="flex items-center gap-3">
-                    <div className="flex-1 w-full bg-gray-200 rounded-full h-3">
-                        <div
-                            className="bg-green-600 h-3 rounded-full transition-all duration-300"
-                            style={{ width: `${progress}%` }}
-                        ></div>
-                    </div>
-                    <button
-                        onClick={handleCancel}
-                        className="bg-red-500 text-white text-sm px-3 py-1 rounded-lg hover:bg-red-600 font-semibold transition-colors duration-200"
-                    >
-                        Cancel
-                    </button>
-                </div>
-            )}
-            <button
-                onClick={handleUpload}
-                className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 font-semibold transition-colors duration-200"
-            >
-                Submit Report
-            </button>
+                        </div>
+                    )}
 
-            {successMessage && (
-                <div className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-100" role="alert">
-                    <span className="font-medium">Success!</span> {successMessage}
+                    <button onClick={handleUpload} className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 font-semibold transition-colors duration-200">
+                        Submit Report
+                    </button>
+
+                    {successMessage && (
+                        <div className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-100" role="alert">
+                            <span className="font-medium">Success!</span> {successMessage}
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
     );
+
 }

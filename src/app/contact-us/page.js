@@ -15,7 +15,6 @@ export default function ContactUsPage() {
     const [status, setStatus] = useState("");
     const [currentTheme, setCurrentTheme] = useState('light');
 
-    // Watch <html> theme changes
     useEffect(() => {
         const observer = new MutationObserver(() => {
             const newTheme = document.documentElement.className;
@@ -35,7 +34,6 @@ export default function ContactUsPage() {
         setStatus("Sending...");
 
         try {
-            // Save to Firestore collection
             await addDoc(collection(db, "contactRequests"), {
                 ...formData,
                 createdAt: serverTimestamp(),
@@ -57,21 +55,21 @@ export default function ContactUsPage() {
 
     return (
         <div className={`min-h-screen p-4 sm:p-8 font-sans transition-colors duration-500`}>
-            <div className="container mx-auto max-w-7xl">
-                {/* Main Card */}
+            <div className="container mx-auto max-w-5xl"> {/* smaller width */}
                 <div
                     className={`backdrop-blur-sm rounded-xl shadow-lg p-6 sm:p-8 space-y-6 sm:space-y-8 
-                        grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mt-16 sm:mt-24 transition-colors duration-500 
-                        ${currentTheme.includes('dark') ? 'bg-gray-800/60 text-white' : 'bg-white/30 text-black'}`}
-                >
+                        grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mt-8 sm:mt-12 transition-colors duration-500 
+                        ${currentTheme.includes('dark') ? 'bg-gray-800/60 text-white' : 'bg-white/30 text-black'}`}> {/* closer to navbar */}
+
                     {/* Contact Form */}
                     <div className="space-y-4 sm:space-y-6 order-1 md:order-2">
                         <h2
-                            className={`text-2xl sm:text-3xl md:text-4xl font-bold text-center 
-                                ${currentTheme.includes('dark') ? 'text-white' : 'text-black'}`}
+                            className={`text-2xl sm:text-3xl md:text-3xl font-bold text-center 
+            ${currentTheme.includes('dark') ? 'text-white' : 'text-gray-800'}`}
                         >
                             CONTACT US
                         </h2>
+
                         <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                 <input
@@ -81,9 +79,9 @@ export default function ContactUsPage() {
                                     value={formData.firstName}
                                     onChange={handleChange}
                                     className={`p-2 sm:p-3 w-full rounded border transition-colors duration-500 
-                                        ${currentTheme.includes('dark')
+                ${currentTheme.includes('dark')
                                             ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 backdrop-blur-sm"
-                                            : "bg-white/50 border-gray-200 text-black placeholder-black backdrop-blur-sm"}`}
+                                            : "bg-white/50 border-gray-200 text-gray-800 placeholder-gray-400 backdrop-blur-sm"}`}
                                     required
                                 />
                                 <input
@@ -93,9 +91,9 @@ export default function ContactUsPage() {
                                     value={formData.lastName}
                                     onChange={handleChange}
                                     className={`p-2 sm:p-3 w-full rounded border transition-colors duration-500 
-                                        ${currentTheme.includes('dark')
+                ${currentTheme.includes('dark')
                                             ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 backdrop-blur-sm"
-                                            : "bg-white/50 border-gray-200 text-black placeholder-black backdrop-blur-sm"}`}
+                                            : "bg-white/50 border-gray-200 text-gray-800 placeholder-gray-400 backdrop-blur-sm"}`}
                                     required
                                 />
                             </div>
@@ -108,9 +106,9 @@ export default function ContactUsPage() {
                                     value={formData.mobile}
                                     onChange={handleChange}
                                     className={`p-2 sm:p-3 w-full rounded border transition-colors duration-500 
-                                        ${currentTheme.includes('dark')
+                ${currentTheme.includes('dark')
                                             ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 backdrop-blur-sm"
-                                            : "bg-white/50 border-gray-200 text-black placeholder-black backdrop-blur-sm"}`}
+                                            : "bg-white/50 border-gray-200 text-gray-800 placeholder-gray-400 backdrop-blur-sm"}`}
                                     required
                                 />
                                 <input
@@ -120,9 +118,9 @@ export default function ContactUsPage() {
                                     value={formData.email}
                                     onChange={handleChange}
                                     className={`p-2 sm:p-3 w-full rounded border transition-colors duration-500 
-                                        ${currentTheme.includes('dark')
+                ${currentTheme.includes('dark')
                                             ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 backdrop-blur-sm"
-                                            : "bg-white/50 border-gray-200 text-black placeholder-black backdrop-blur-sm"}`}
+                                            : "bg-white/50 border-gray-200 text-gray-800 placeholder-gray-400 backdrop-blur-sm"}`}
                                     required
                                 />
                             </div>
@@ -130,13 +128,14 @@ export default function ContactUsPage() {
                             <textarea
                                 name="message"
                                 placeholder="Message"
-                                rows="4"
+                                rows={4}
+                                maxLength={500}
                                 value={formData.message}
                                 onChange={handleChange}
                                 className={`p-2 sm:p-3 w-full rounded border transition-colors duration-500 
-                                    ${currentTheme.includes('dark')
+        ${currentTheme.includes('dark')
                                         ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 backdrop-blur-sm"
-                                        : "bg-white/50 border-gray-200 text-black placeholder-black backdrop-blur-sm"}`}
+                                        : "bg-white/50 border-gray-200 text-gray-800 placeholder-gray-400 backdrop-blur-sm"} resize-y max-h-60`}
                                 required
                             ></textarea>
 
@@ -149,7 +148,8 @@ export default function ContactUsPage() {
                         </form>
 
                         {status && (
-                            <p className="text-center mt-2 sm:mt-4 text-blue-600 dark:text-blue-400">
+                            <p className={`text-center mt-2 sm:mt-4 font-bold
+        ${currentTheme.includes('dark') ? 'text-blue-600' : 'text-blue-800'}`}>
                                 {status}
                             </p>
                         )}
@@ -158,67 +158,47 @@ export default function ContactUsPage() {
                     {/* Info Section */}
                     <div className="space-y-6 sm:space-y-8 order-2 md:order-1">
                         <h2
-                            className={`text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 
-                                ${currentTheme.includes("dark") ? "text-white" : "text-black"}`}
+                            className={`text-2xl sm:text-3xl md:text-3xl font-bold mb-4 sm:mb-6 
+            ${currentTheme.includes("dark") ? "text-white" : "text-gray-800"}`}
                         >
                             Get In Touch With Us Now!
                         </h2>
+
                         <div className="space-y-4 sm:space-y-6">
                             {/* Mission */}
                             <div className="flex items-start gap-3 sm:gap-4">
-                                <img
-                                    src="https://placehold.co/24x24/111827/ffffff?text=M"
-                                    alt="Mission Icon"
-                                    width={24}
-                                    height={24}
-                                    className="rounded-full p-1 bg-blue-100 dark:bg-blue-900"
-                                />
+                                <div className="text-3xl p-2 rounded-full text-white">🎯</div>
                                 <div>
-                                    <h3 className={`font-bold text-lg sm:text-xl md:text-2xl mb-1 sm:mb-2 ${currentTheme.includes("dark") ? "text-white" : "text-black"}`}>
+                                    <h3 className={`font-bold text-lg sm:text-xl md:text-xl mb-1 sm:mb-2 ${currentTheme.includes("dark") ? "text-white" : "text-gray-800"}`}>
                                         Our Mission
                                     </h3>
-                                    <p className={`text-sm sm:text-base md:text-lg ${currentTheme.includes("dark") ? "text-white" : "text-black"}`}>
-                                        Our <strong>M</strong>ission is to empower communities to protect our
-                                        lakes and natural habitats by providing a simple way to report pollution
-                                        and share information.
+                                    <p className={`text-sm sm:text-base md:text-base ${currentTheme.includes("dark") ? "text-white" : "text-gray-800"}`}>
+                                        Our <strong>M</strong>ission is to help communities protect lakes and nature by reporting pollution.
                                     </p>
                                 </div>
                             </div>
 
                             {/* How to Get Involved */}
                             <div className="flex items-start gap-3 sm:gap-4">
-                                <img
-                                    src="https://placehold.co/24x24/111827/ffffff?text=V"
-                                    alt="Volunteering Icon"
-                                    width={24}
-                                    height={24}
-                                    className="rounded-full p-1 bg-blue-100 dark:bg-blue-900"
-                                />
+                                <div className="text-3xl p-2 rounded-full text-white">🤝</div>
                                 <div>
-                                    <h3 className={`font-bold text-lg sm:text-xl md:text-2xl mb-1 sm:mb-2 ${currentTheme.includes("dark") ? "text-white" : "text-black"}`}>
+                                    <h3 className={`font-bold text-lg sm:text-xl md:text-xl mb-1 sm:mb-2 ${currentTheme.includes("dark") ? "text-white" : "text-gray-800"}`}>
                                         How to Get Involved
                                     </h3>
-                                    <p className={`text-sm sm:text-base md:text-lg ${currentTheme.includes("dark") ? "text-white" : "text-black"}`}>
-                                        You can contribute by uploading pollution reports, <strong>V</strong>olunteering
-                                        for cleanup events, and spreading awareness. Every action counts!
+                                    <p className={`text-sm sm:text-base md:text-base ${currentTheme.includes("dark") ? "text-white" : "text-gray-800"}`}>
+                                        You can contribute by uploading pollution reports, <strong>V</strong>olunteering for cleanup events, and spreading awareness. Every action counts!
                                     </p>
                                 </div>
                             </div>
 
                             {/* Together */}
                             <div className="flex items-start gap-3 sm:gap-4">
-                                <img
-                                    src="https://placehold.co/24x24/111827/ffffff?text=W"
-                                    alt="Teamwork Icon"
-                                    width={24}
-                                    height={24}
-                                    className="rounded-full p-1 bg-blue-100 dark:bg-blue-900"
-                                />
+                                <div className="text-3xl p-2 rounded-full text-white">🌍</div>
                                 <div>
-                                    <h3 className={`font-bold text-lg sm:text-xl md:text-2xl mb-1 sm:mb-2 ${currentTheme.includes("dark") ? "text-white" : "text-black"}`}>
+                                    <h3 className={`font-bold text-lg sm:text-xl md:text-xl mb-1 sm:mb-2 ${currentTheme.includes("dark") ? "text-white" : "text-gray-800"}`}>
                                         Together, We Can Make a Difference
                                     </h3>
-                                    <p className={`text-sm sm:text-base md:text-lg ${currentTheme.includes("dark") ? "text-white" : "text-black"}`}>
+                                    <p className={`text-sm sm:text-base md:text-base ${currentTheme.includes("dark") ? "text-white" : "text-gray-800"}`}>
                                         <strong>W</strong>e believe your reports are vital in helping local
                                         organizations and authorities respond quickly to environmental issues.
                                         Together, we can make a difference.
@@ -227,19 +207,18 @@ export default function ContactUsPage() {
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
+
             {/* Footer Image */}
-            <div className="w-full flex justify-center items-end mt-6 sm:mt-10">
+            <div className="w-full flex justify-center items-end mt-3 mb-0">
                 <img
                     src={currentTheme.includes('dark') ? "/lake_maps_dark.png" : "/lake_maps_light.png"}
                     alt="Lake Map"
-                    className="rounded-lg p-2 sm:p-4 w-40 sm:w-48 h-auto"
+                    className="rounded-lg w-40 sm:w-48 h-auto"
                 />
             </div>
-
-
-
         </div>
     );
 }

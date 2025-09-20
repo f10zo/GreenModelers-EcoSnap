@@ -4,9 +4,7 @@ import React, { useState, useEffect } from "react";
 import { db } from "../../../firebase";
 import { collection, query, onSnapshot } from "firebase/firestore";
 import Image from "next/image";
-import Link from "next/link";
 import { FaWaze, FaGoogle } from "react-icons/fa";
-
 
 const getCoords = (coordString) => {
     if (!coordString || !coordString.includes("Lat:") || !coordString.includes("Lon:")) {
@@ -38,9 +36,7 @@ export default function Gallery({ onUploadSuccess }) {
     }, []);
 
     useEffect(() => {
-        // This is the real-time listener that automatically updates the gallery.
         const q = query(collection(db, "reports"));
-
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const items = snapshot.docs.map((doc) => ({
                 id: doc.id,
@@ -52,44 +48,32 @@ export default function Gallery({ onUploadSuccess }) {
             console.error("Error fetching gallery:", error);
             setLoading(false);
         });
-
-        // Clean up the listener when the component unmounts
         return () => unsubscribe();
     }, []);
 
-    const handleImageClick = (item) => {
-        setSelectedImage(item);
-    };
-
-    const handleCloseModal = () => {
-        setSelectedImage(null);
-        setShowNavOptions(false);
-    };
+    const handleImageClick = (item) => setSelectedImage(item);
+    const handleCloseModal = () => { setSelectedImage(null); setShowNavOptions(false); };
 
     const filteredGallery = gallery
-        .filter((item) =>
-            filterPollution === "All" ? true : item.pollution_level === filterPollution
-        )
+        .filter((item) => filterPollution === "All" ? true : item.pollution_level === filterPollution)
         .sort((a, b) => {
             const dateA = new Date(a.date.replace(' ', 'T'));
             const dateB = new Date(b.date.replace(' ', 'T'));
-            if (dateSort === "newest") return dateB - dateA;
-            else return dateA - dateB;
+            return dateSort === "newest" ? dateB - dateA : dateA - dateB;
         });
 
     return (
         <div
             className={`w-full shadow-xl rounded-3xl p-6 overflow-y-auto border-2 transition-colors duration-500 md:col-span-2 lg:col-span-3 ${currentTheme === 'dark'
-                ? 'bg-slate-800/80 text-white border-emerald-700'
-                : 'bg-white/30 text-black border-emerald-300'
+                    ? 'bg-slate-800/80 text-white border-emerald-700'
+                    : 'bg-white/30 text-black border-emerald-300'
                 }`}
-            style={{ backdropFilter: 'blur(1px)' }}
+            style={{ backdropFilter: 'blur(12px)' }} // stronger blur
         >
             <h3 className={`text-3xl font-extrabold mb-4 text-left flex items-center gap-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'text-white-300' : 'text-white-700'}`}>
                 📸 Gallery
             </h3>
-            <div className="mb-4">
-            </div>
+
             <div className="flex gap-4 mb-6">
                 <select
                     className={`flex-1 border rounded-lg p-2 font-semibold ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`}
@@ -110,6 +94,7 @@ export default function Gallery({ onUploadSuccess }) {
                     <option value="oldest">Oldest → Newest</option>
                 </select>
             </div>
+
             {loading ? (
                 <div className="flex justify-center items-center h-full">
                     <p className={`${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'} text-lg`}>Loading...</p>
@@ -117,7 +102,7 @@ export default function Gallery({ onUploadSuccess }) {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto max-h-[70vh] pr-2">
                     {filteredGallery.map((item, i) => (
-                        <div key={i} className={`shadow-lg rounded-xl overflow-hidden transform transition-transform duration-300 hover:scale-105 ${currentTheme === 'dark' ? 'bg-black/50 text-white' : 'bg-white/50 text-black'}`}>
+                        <div key={i} className={`shadow-lg rounded-xl overflow-hidden transform transition-transform duration-300 hover:scale-105 ${currentTheme === 'dark' ? 'bg-black/50 text-white' : 'bg-white/50 text-black'}`} style={{ backdropFilter: 'blur(8px)' }}>
                             <Image
                                 src={item.imageUrl}
                                 alt=""
@@ -128,9 +113,7 @@ export default function Gallery({ onUploadSuccess }) {
                             />
                             <div className="p-3">
                                 <p className="text-sm font-semibold">{item.description}</p>
-                                <p className={`text-xs mt-1 ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                                    📍 {item.location}
-                                </p>
+                                <p className={`text-xs mt-1 ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>📍 {item.location}</p>
                                 <div className={`flex items-center text-xs mt-1 ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                                     <span className={`w-3 h-3 rounded-full mr-2 ${item.pollution_level === 'Low' ? 'bg-green-500' : item.pollution_level === 'Medium' ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
                                     {item.pollution_level} | {item.date}
@@ -140,13 +123,16 @@ export default function Gallery({ onUploadSuccess }) {
                     ))}
                 </div>
             )}
+
             {selectedImage && (
                 <div
-                    className={`fixed inset-0 bg-black backdrop-blur-sm flex items-center justify-center p-4 z-50 ${currentTheme === 'dark' ? 'bg-opacity-90' : 'bg-opacity-75'}`}
+                    className={`fixed inset-0 flex items-center justify-center p-4 z-50 ${currentTheme === 'dark' ? 'bg-black/90' : 'bg-white/75'}`}
+                    style={{ backdropFilter: 'blur(12px)' }} // modal overlay blur
                     onClick={handleCloseModal}
                 >
                     <div
                         className={`relative flex flex-col rounded-lg shadow-lg max-h-[90vh] max-w-[90vw] p-4 ${currentTheme === 'dark' ? 'bg-black/80 text-white' : 'bg-white/95 text-black'}`}
+                        style={{ backdropFilter: 'blur(8px)' }} // modal content blur
                         onClick={(e) => e.stopPropagation()}
                     >
                         <Image
@@ -162,6 +148,7 @@ export default function Gallery({ onUploadSuccess }) {
                             <p className={`text-xs mt-1 ${currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
                                 {selectedImage.pollution_level} | {selectedImage.date}
                             </p>
+
                             {selectedImage.coordinates && (
                                 <div className="relative flex justify-center mt-4">
                                     <button
@@ -170,9 +157,9 @@ export default function Gallery({ onUploadSuccess }) {
                                     >
                                         Navigate
                                     </button>
+
                                     {showNavOptions && (
                                         <div className={`absolute bottom-full mb-2 w-48 rounded-lg shadow-lg overflow-hidden ${currentTheme === 'dark' ? 'bg-black/90' : 'bg-white'}`}>
-
                                             <a
                                                 href={`https://waze.com/ul?ll=${getCoords(selectedImage.coordinates).lat},${getCoords(selectedImage.coordinates).lon}&navigate=yes`}
                                                 target="_blank"
@@ -189,23 +176,19 @@ export default function Gallery({ onUploadSuccess }) {
                                                 onClick={handleCloseModal}
                                                 className={`flex items-center gap-2 p-3 w-full text-left transition-colors ${currentTheme === 'dark' ? 'text-white hover:bg-gray-800' : 'text-gray-800 hover:bg-gray-100'}`}
                                             >
-                                                <FaGoogle
-                                                    className="w-6 h-6"
-                                                    style={{
-                                                        background: "conic-gradient(from -45deg, #ea4335, #fbbc05, #34a853, #4285f4)",
-                                                        WebkitBackgroundClip: "text",
-                                                        WebkitTextFillColor: "transparent"
-                                                    }}
-                                                />
+                                                <FaGoogle className="w-6 h-6" style={{
+                                                    background: "conic-gradient(from -45deg, #ea4335, #fbbc05, #34a853, #4285f4)",
+                                                    WebkitBackgroundClip: "text",
+                                                    WebkitTextFillColor: "transparent"
+                                                }} />
                                                 Google Maps
                                             </a>
-
-
                                         </div>
                                     )}
                                 </div>
                             )}
                         </div>
+
                         <button
                             onClick={handleCloseModal}
                             className="absolute top-2 right-2 p-1 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-colors z-10"

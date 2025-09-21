@@ -213,7 +213,7 @@ export default function ContactUsPage() {
 
             {/* Footer Image */}
             <div className="w-full flex justify-center items-end mt-3 mb-0">
-                <img
+                <image
                     src={currentTheme.includes('dark') ? "/lake_maps_dark.png" : "/lake_maps_light.png"}
                     alt="Lake Map"
                     className="rounded-lg w-40 sm:w-48 h-auto"

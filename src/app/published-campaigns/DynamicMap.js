@@ -66,7 +66,7 @@ export default function DynamicMap({ campaigns = [] }) {
                                     <Popup className="max-w-xs">
                                         <div className="p-2">
                                             {c.imageUrl && (
-                                                <img
+                                                <image
                                                     src={c.imageUrl}
                                                     alt={c.campaignName}
                                                     className="rounded-lg mb-2 max-h-24 object-cover"

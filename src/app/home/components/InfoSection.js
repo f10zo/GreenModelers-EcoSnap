@@ -56,7 +56,7 @@ export default function InfoSection() {
           >
             Every action helps!
           </strong>{" "}
-          Let's protect our vital natural resources together.
+          Let&apos;s protect our vital natural resources together.
         </p>
 
         {/* ✅ Section for Report and Share Info */}
@@ -201,7 +201,7 @@ export default function InfoSection() {
                 className={`text-sm leading-relaxed transition-colors duration-500 ${currentTheme === "dark" ? "text-gray-400" : "text-gray-600"
                   }`}
               >
-                Have questions, feedback, or ideas? Reach out to our team — we'd love to hear from you!
+                Have questions, feedback, or ideas? Reach out to our team — we&apos;d love to hear from you!
               </p>
             </div>
           </Link>

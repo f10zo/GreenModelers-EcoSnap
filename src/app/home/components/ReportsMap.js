@@ -68,8 +68,7 @@ export default function ReportsMap({ reports }) {
             }}
         >
             <h3
-                className={`text-3xl font-extrabold mb-6 text-center transition-colors duration-500`}
-                style={{ color: currentTheme === "dark" ? "#4ade80" : "#15803d" }}
+                className={`text-3xl font-extrabold mb-6 text-center transition-colors duration-500 ${currentTheme === "dark" ? "text-emerald-300" : "text-emerald-700"}`}
             >
                 🗺️ Reports Map
             </h3>

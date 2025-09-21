@@ -54,18 +54,18 @@ export default function ContactUsPage() {
     };
 
     return (
-        <div className={`min-h-screen p-4 sm:p-8 font-sans transition-colors duration-500`}>
-            <div className="container mx-auto max-w-5xl"> {/* smaller width */}
+        <div className={`font-sans transition-colors duration-500`}>
+            <div className="container mx-auto max-w-7xl">
                 <div
                     className={`backdrop-blur-sm rounded-xl shadow-lg p-6 sm:p-8 space-y-6 sm:space-y-8 
-                        grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mt-8 sm:mt-12 transition-colors duration-500 
-                        ${currentTheme.includes('dark') ? 'bg-gray-800/60 text-white' : 'bg-white/30 text-black'}`}> {/* closer to navbar */}
+                        grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mt-2 sm:mt-4 transition-colors duration-500 
+                        ${currentTheme.includes('dark') ? 'bg-gray-950/60 text-white' : 'bg-emerald-50/50 text-emerald-900'}`}>
 
                     {/* Contact Form */}
                     <div className="space-y-4 sm:space-y-6 order-1 md:order-2">
                         <h2
-                            className={`text-2xl sm:text-3xl md:text-3xl font-bold text-center 
-            ${currentTheme.includes('dark') ? 'text-white' : 'text-gray-800'}`}
+                            className={`text-2xl sm:text-3xl md:text-3xl font-extrabold text-center 
+                ${currentTheme.includes('dark') ? 'text-emerald-300' : 'text-emerald-900'}`}
                         >
                             CONTACT US
                         </h2>
@@ -80,8 +80,8 @@ export default function ContactUsPage() {
                                     onChange={handleChange}
                                     className={`p-2 sm:p-3 w-full rounded border transition-colors duration-500 
                 ${currentTheme.includes('dark')
-                                            ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 backdrop-blur-sm"
-                                            : "bg-white/50 border-gray-200 text-gray-800 placeholder-gray-400 backdrop-blur-sm"}`}
+                                            ? "bg-emerald-900/50 border-emerald-800 text-emerald-100 placeholder-emerald-200 backdrop-blur-sm"
+                                            : "bg-emerald-50/50 border-emerald-200 text-emerald-900 placeholder-emerald-400 backdrop-blur-sm"}`}
                                     required
                                 />
                                 <input
@@ -92,8 +92,8 @@ export default function ContactUsPage() {
                                     onChange={handleChange}
                                     className={`p-2 sm:p-3 w-full rounded border transition-colors duration-500 
                 ${currentTheme.includes('dark')
-                                            ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 backdrop-blur-sm"
-                                            : "bg-white/50 border-gray-200 text-gray-800 placeholder-gray-400 backdrop-blur-sm"}`}
+                                            ? "bg-emerald-900/50 border-emerald-800 text-emerald-100 placeholder-emerald-200 backdrop-blur-sm"
+                                            : "bg-emerald-50/50 border-emerald-200 text-emerald-900 placeholder-emerald-400 backdrop-blur-sm"}`}
                                     required
                                 />
                             </div>
@@ -107,8 +107,8 @@ export default function ContactUsPage() {
                                     onChange={handleChange}
                                     className={`p-2 sm:p-3 w-full rounded border transition-colors duration-500 
                 ${currentTheme.includes('dark')
-                                            ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 backdrop-blur-sm"
-                                            : "bg-white/50 border-gray-200 text-gray-800 placeholder-gray-400 backdrop-blur-sm"}`}
+                                            ? "bg-emerald-900/50 border-emerald-800 text-emerald-100 placeholder-emerald-200 backdrop-blur-sm"
+                                            : "bg-emerald-50/50 border-emerald-200 text-emerald-900 placeholder-emerald-400 backdrop-blur-sm"}`}
                                     required
                                 />
                                 <input
@@ -119,8 +119,8 @@ export default function ContactUsPage() {
                                     onChange={handleChange}
                                     className={`p-2 sm:p-3 w-full rounded border transition-colors duration-500 
                 ${currentTheme.includes('dark')
-                                            ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 backdrop-blur-sm"
-                                            : "bg-white/50 border-gray-200 text-gray-800 placeholder-gray-400 backdrop-blur-sm"}`}
+                                            ? "bg-emerald-900/50 border-emerald-800 text-emerald-100 placeholder-emerald-200 backdrop-blur-sm"
+                                            : "bg-emerald-50/50 border-emerald-200 text-emerald-900 placeholder-emerald-400 backdrop-blur-sm"}`}
                                     required
                                 />
                             </div>
@@ -134,14 +134,14 @@ export default function ContactUsPage() {
                                 onChange={handleChange}
                                 className={`p-2 sm:p-3 w-full rounded border transition-colors duration-500 
         ${currentTheme.includes('dark')
-                                        ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 backdrop-blur-sm"
-                                        : "bg-white/50 border-gray-200 text-gray-800 placeholder-gray-400 backdrop-blur-sm"} resize-y max-h-60`}
+                                        ? "bg-emerald-900/50 border-emerald-800 text-emerald-100 placeholder-emerald-200 backdrop-blur-sm"
+                                        : "bg-emerald-50/50 border-emerald-200 text-emerald-900 placeholder-emerald-400 backdrop-blur-sm"} resize-y max-h-60`}
                                 required
                             ></textarea>
 
                             <button
                                 type="submit"
-                                className="w-full p-3 sm:p-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-all"
+                                className="w-full p-3 sm:p-3 bg-emerald-700 text-white rounded hover:bg-emerald-800 transition-all"
                             >
                                 Submit
                             </button>
@@ -149,7 +149,7 @@ export default function ContactUsPage() {
 
                         {status && (
                             <p className={`text-center mt-2 sm:mt-4 font-bold
-        ${currentTheme.includes('dark') ? 'text-blue-600' : 'text-blue-800'}`}>
+        ${currentTheme.includes('dark') ? 'text-emerald-300' : 'text-emerald-900'}`}>
                                 {status}
                             </p>
                         )}
@@ -158,8 +158,8 @@ export default function ContactUsPage() {
                     {/* Info Section */}
                     <div className="space-y-6 sm:space-y-8 order-2 md:order-1">
                         <h2
-                            className={`text-2xl sm:text-3xl md:text-3xl font-bold mb-4 sm:mb-6 
-            ${currentTheme.includes("dark") ? "text-white" : "text-gray-800"}`}
+                            className={`text-2xl sm:text-3xl md:text-3xl font-extrabold mb-4 sm:mb-6 
+            ${currentTheme.includes("dark") ? "text-emerald-300" : "text-emerald-900"}`}
                         >
                             Get In Touch With Us Now!
                         </h2>
@@ -169,10 +169,10 @@ export default function ContactUsPage() {
                             <div className="flex items-start gap-3 sm:gap-4">
                                 <div className="text-3xl p-2 rounded-full text-white">🎯</div>
                                 <div>
-                                    <h3 className={`font-bold text-lg sm:text-xl md:text-xl mb-1 sm:mb-2 ${currentTheme.includes("dark") ? "text-white" : "text-gray-800"}`}>
+                                    <h3 className={`font-extrabold text-lg sm:text-xl md:text-xl mb-1 sm:mb-2 ${currentTheme.includes("dark") ? "text-emerald-300" : "text-emerald-900"}`}>
                                         Our Mission
                                     </h3>
-                                    <p className={`text-sm sm:text-base md:text-base ${currentTheme.includes("dark") ? "text-white" : "text-gray-800"}`}>
+                                    <p className={`text-lg font-serif transition-colors duration-500 ${currentTheme.includes("dark") ? "text-emerald-50" : "text-emerald-800"}`}>
                                         Our <strong>M</strong>ission is to help communities protect lakes and nature by reporting pollution.
                                     </p>
                                 </div>
@@ -182,10 +182,10 @@ export default function ContactUsPage() {
                             <div className="flex items-start gap-3 sm:gap-4">
                                 <div className="text-3xl p-2 rounded-full text-white">🤝</div>
                                 <div>
-                                    <h3 className={`font-bold text-lg sm:text-xl md:text-xl mb-1 sm:mb-2 ${currentTheme.includes("dark") ? "text-white" : "text-gray-800"}`}>
+                                    <h3 className={`font-extrabold text-lg sm:text-xl md:text-xl mb-1 sm:mb-2 ${currentTheme.includes("dark") ? "text-emerald-300" : "text-emerald-900"}`}>
                                         How to Get Involved
                                     </h3>
-                                    <p className={`text-sm sm:text-base md:text-base ${currentTheme.includes("dark") ? "text-white" : "text-gray-800"}`}>
+                                    <p className={`text-lg font-serif transition-colors duration-500 ${currentTheme.includes("dark") ? "text-emerald-50" : "text-emerald-800"}`}>
                                         You can contribute by uploading pollution reports, <strong>V</strong>olunteering for cleanup events, and spreading awareness. Every action counts!
                                     </p>
                                 </div>
@@ -195,10 +195,10 @@ export default function ContactUsPage() {
                             <div className="flex items-start gap-3 sm:gap-4">
                                 <div className="text-3xl p-2 rounded-full text-white">🌍</div>
                                 <div>
-                                    <h3 className={`font-bold text-lg sm:text-xl md:text-xl mb-1 sm:mb-2 ${currentTheme.includes("dark") ? "text-white" : "text-gray-800"}`}>
+                                    <h3 className={`font-extrabold text-lg sm:text-xl md:text-xl mb-1 sm:mb-2 ${currentTheme.includes("dark") ? "text-emerald-300" : "text-emerald-900"}`}>
                                         Together, We Can Make a Difference
                                     </h3>
-                                    <p className={`text-sm sm:text-base md:text-base ${currentTheme.includes("dark") ? "text-white" : "text-gray-800"}`}>
+                                    <p className={`text-lg font-serif transition-colors duration-500 ${currentTheme.includes("dark") ? "text-emerald-50" : "text-emerald-800"}`}>
                                         <strong>W</strong>e believe your reports are vital in helping local
                                         organizations and authorities respond quickly to environmental issues.
                                         Together, we can make a difference.
@@ -209,15 +209,6 @@ export default function ContactUsPage() {
                     </div>
 
                 </div>
-            </div>
-
-            {/* Footer Image */}
-            <div className="w-full flex justify-center items-end mt-3 mb-0">
-                <image
-                    src={currentTheme.includes('dark') ? "/lake_maps_dark.png" : "/lake_maps_light.png"}
-                    alt="Lake Map"
-                    className="rounded-lg w-40 sm:w-48 h-auto"
-                />
             </div>
         </div>
     );

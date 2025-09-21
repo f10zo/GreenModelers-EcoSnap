@@ -9,7 +9,7 @@ export default function ThemeToggle() {
     const savedTheme = localStorage.getItem('theme') || 'light';
     setTheme(savedTheme);
     // Apply the class to the root HTML element
-    document.documentElement.className = savedTheme; 
+    document.documentElement.className = savedTheme;
   }, []);
 
   const toggleTheme = () => {
@@ -21,8 +21,13 @@ export default function ThemeToggle() {
   };
 
   return (
-    <button onClick={toggleTheme} className="p-2 rounded-full text-white">
+    <button
+      onClick={toggleTheme}
+      className="p-3 sm:p-4 rounded-full text-white text-2xl sm:text-3xl transition-transform hover:scale-110"
+      aria-label="Toggle theme"
+    >
       {theme === 'light' ? '🌙' : '☀️'}
     </button>
   );
+
 }

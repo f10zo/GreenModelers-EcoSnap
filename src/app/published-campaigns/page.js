@@ -41,7 +41,7 @@ export default function PublishedCampaignsPage() {
 
     // Detect theme on client
     useEffect(() => {
-        setMounted(true); // ✅ marks that client-side rendering is ready
+        setMounted(true);
         const observer = new MutationObserver(() => {
             setCurrentTheme(document.documentElement.className);
         });
@@ -56,8 +56,8 @@ export default function PublishedCampaignsPage() {
 
     return (
         <div className="max-w-6xl mx-auto px-6 py-3">
-            <div className={`max-w-lg mx-auto backdrop-blur-md p-4 rounded-3xl shadow-xl transition-colors duration-500 ${isDarkMode ? 'bg-slate-800/80' : 'bg-white/30'} my-4 text-center`}>
-                <h1 className={`text-3xl font-bold mb-2 mt-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+            <div className={`max-w-lg mx-auto backdrop-blur-md p-4 rounded-3xl shadow-xl transition-colors duration-500 ${isDarkMode ? 'bg-slate-900/80' : 'bg-white/80'} my-4 text-center`}>
+                <h1 className={`text-3xl font-bold mb-2 mt-1 ${isDarkMode ? 'text-emerald-600' : 'text-emerald-800'}`}>
                     📢 Published Campaigns
                 </h1>
             </div>
@@ -70,55 +70,50 @@ export default function PublishedCampaignsPage() {
 
             {!loading && campaigns.length > 0 && (
                 <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {campaigns.map((c) => (
                             <div
                                 key={c.id}
-                                className="rounded-2xl p-4 shadow-md transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-                                style={{
-                                    backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.3)'
-                                }}
+                                className={`rounded-2xl p-4 shadow-md transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${isDarkMode ? 'bg-slate-900 text-emerald-400' : 'bg-emerald-100/60 text-emerald-800'}`}
                             >
-                                <h3 className={`text-xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                                <h3 className="text-xl font-bold mb-2">
                                     {c.campaignName}
                                 </h3>
                                 <div className="flex flex-col space-y-1 mb-2 text-sm">
-                                    <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                                        <span className={`font-bold mr-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>👤 Organizer:</span> {c.organizer}
+                                    <p>
+                                        <span className="font-bold mr-1">👤 Organizer:</span> {c.organizer}
                                     </p>
-                                    <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                                        <span className={`font-bold mr-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>📅 Date & Time:</span> {c.date} at {c.time}
+                                    <p>
+                                        <span className="font-bold mr-1">📅 Date & Time:</span> {c.date} at {c.time}
                                     </p>
-                                    <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                                        <span className={`font-bold mr-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>📍 Location:</span> {c.location}
+                                    <p>
+                                        <span className="font-bold mr-1">📍 Location:</span> {c.location}
                                     </p>
-                                    <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                                        <span className={`font-bold mr-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>🧑‍🤝‍🧑 Volunteers:</span> {c.volunteersNeeded} needed
+                                    <p>
+                                        <span className="font-bold mr-1">🧑‍🤝‍🧑 Volunteers:</span> {c.volunteersNeeded} needed
                                     </p>
                                     {c.materials && (
-                                        <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                                            <span className={`font-bold mr-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>🛠️ Materials:</span> {c.materials}
+                                        <p>
+                                            <span className="font-bold mr-1">🛠️ Materials:</span> {c.materials}
                                         </p>
                                     )}
                                 </div>
                                 <hr className="my-1 border-gray-300 dark:border-gray-700" />
                                 <p className={`text-xs italic ${isDarkMode ? 'text-gray-400' : 'text-gray-800'}`}>{c.description}</p>
-
                             </div>
                         ))}
                     </div>
-
                     <div className="max-w-lg mx-auto mt-8 space-y-3">
                         {/* Background for the title */}
                         <div className={`backdrop-blur-md p-4 rounded-3xl shadow-xl transition-colors duration-500 text-center ${isDarkMode ? 'bg-slate-800/80' : 'bg-white/30'}`}>
-                            <h2 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                            <h2 className={`text-3xl font-bold ${isDarkMode ? 'text-emerald-500' : 'text-emerald-800'}`}>
                                 🗺️ Campaign Map
                             </h2>
                         </div>
 
                         {/* Background for the paragraph */}
                         <div className={`backdrop-blur-md p-4 rounded-3xl shadow-xl transition-colors duration-500 text-center ${isDarkMode ? 'bg-slate-800/80' : 'bg-white/30'}`}>
-                            <p className={`text-sm font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                            <p className={`text-sm font-semibold ${isDarkMode ? 'text--emerald-500' : 'text--emerald-800'}`}>
                                 Click on a pin on the map to view the campaign&apos;s details.
                             </p>
                         </div>

@@ -1,9 +1,10 @@
+// src/app/published-campaigns/DynamicMap.js
 'use client';
 
-import { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { useEffect, useState } from 'react';
 
 // Fix default marker icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -13,41 +14,33 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Dynamically import MapContainer to avoid SSR issues
-const MapContainer = dynamic(
-    () => import('react-leaflet').then(mod => mod.MapContainer),
-    { ssr: false }
-);
-const TileLayer = dynamic(
-    () => import('react-leaflet').then(mod => mod.TileLayer),
-    { ssr: false }
-);
-const Marker = dynamic(
-    () => import('react-leaflet').then(mod => mod.Marker),
-    { ssr: false }
-);
-const Popup = dynamic(
-    () => import('react-leaflet').then(mod => mod.Popup),
-    { ssr: false }
-);
+// A utility to get the theme on the client-side
+const useClientTheme = () => {
+    const [theme, setTheme] = useState('light');
+    useEffect(() => {
+        const observer = new MutationObserver(() => {
+            setTheme(document.documentElement.className.includes('dark') ? 'dark' : 'light');
+        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        setTheme(document.documentElement.className.includes('dark') ? 'dark' : 'light');
+        return () => observer.disconnect();
+    }, []);
+    return theme;
+};
 
 const calculateCenter = (campaigns) => {
-    if (!campaigns || campaigns.length === 0) return [32.85, 35.55];
-    const valid = campaigns.filter(
-        (c) => typeof c.locationLat === 'number' && typeof c.locationLon === 'number'
-    );
-    if (valid.length === 0) return [32.85, 35.55];
+    const valid = campaigns.filter(c => typeof c.locationLat === 'number' && typeof c.locationLon === 'number');
+    if (valid.length === 0) {
+        return [32.85, 35.55]; // Default center (Sea of Galilee)
+    }
     const latSum = valid.reduce((sum, c) => sum + c.locationLat, 0);
     const lonSum = valid.reduce((sum, c) => sum + c.locationLon, 0);
     return [latSum / valid.length, lonSum / valid.length];
 };
 
 export default function DynamicMap({ campaigns = [] }) {
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => setMounted(true), []);
-    if (!mounted) return null;
-
+    const theme = useClientTheme();
+    const isDarkMode = theme === 'dark';
     const mapCenter = calculateCenter(campaigns);
 
     return (
@@ -55,50 +48,53 @@ export default function DynamicMap({ campaigns = [] }) {
             {mapCenter && (
                 <MapContainer center={mapCenter} zoom={11} scrollWheelZoom className="w-full h-full">
                     <TileLayer
-                        attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                     {campaigns.map(
                         (c) =>
-                            typeof c.locationLat === 'number' &&
-                            typeof c.locationLon === 'number' && (
+                            typeof c.locationLat === 'number' && typeof c.locationLon === 'number' && (
                                 <Marker key={c.id} position={[c.locationLat, c.locationLon]}>
-                                    <Popup className="max-w-xs">
-                                        <div className="p-2">
-                                            {c.imageUrl && (
-                                                <image
+                                    <Popup className={`max-w-xs ${isDarkMode ? 'dark-mode-popup' : ''}`}>
+                                        <div className={`p-2 ${isDarkMode ? 'text-emerald-500' : 'text-gray-800'}`}>
+                                            {c.imageUrl ? (
+                                                <img
                                                     src={c.imageUrl}
                                                     alt={c.campaignName}
-                                                    className="rounded-lg mb-2 max-h-24 object-cover"
+                                                    className="rounded-lg mb-2 w-full max-h-24 object-cover"
                                                 />
+                                            ) : (
+                                                <div className="w-full h-24 flex items-center justify-center bg-gray-200 rounded-lg mb-2">
+                                                    <p className="text-gray-500 text-sm">No Image</p>
+                                                </div>
                                             )}
-                                            <h4 className="font-bold text-md mb-1 text-gray-800">
+                                            <h4 className={`font-bold text-md mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                                 {c.campaignName}
                                             </h4>
-                                            <div className="text-gray-700 text-sm leading-snug space-y-1">
+                                            <div className="text-sm leading-snug space-y-1">
                                                 <p>
-                                                    <span className="font-bold text-gray-900">👤 Organizer:</span>{' '}
+                                                    <span className={`font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>👤 Organizer:</span>{' '}
                                                     {c.organizer}
                                                 </p>
                                                 <p>
-                                                    <span className="font-bold text-gray-900">📅 Date & Time:</span>{' '}
+                                                    <span className={`font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>📅 Date & Time:</span>{' '}
                                                     {c.date} at {c.time}
                                                 </p>
                                                 <p>
-                                                    <span className="font-bold text-gray-900">🧑‍🤝‍🧑 Volunteers:</span>{' '}
+                                                    <span className={`font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>🧑‍🤝‍🧑 Volunteers:</span>{' '}
                                                     {c.volunteersNeeded} needed
                                                 </p>
                                                 {c.materials && (
                                                     <p>
-                                                        <span className="font-bold text-gray-900">🛠️ Materials:</span>{' '}
+                                                        <span className={`font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>🛠️ Materials:</span>{' '}
                                                         {c.materials}
                                                     </p>
                                                 )}
                                             </div>
                                             {c.description && (
                                                 <>
-                                                    <hr className="my-1 border-gray-300" />
-                                                    <p className="text-gray-600 italic text-xs leading-snug">
+                                                    <hr className={`my-1 ${isDarkMode ? 'border-gray-600' : 'border-gray-300'}`} />
+                                                    <p className={`italic text-xs leading-snug ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                                                         {c.description}
                                                     </p>
                                                 </>

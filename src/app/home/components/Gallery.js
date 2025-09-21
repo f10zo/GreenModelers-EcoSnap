@@ -70,7 +70,7 @@ export default function Gallery({ onUploadSuccess }) {
                 }`}
             style={{ backdropFilter: 'blur(12px)' }} // stronger blur
         >
-            <h3 className={`text-3xl font-extrabold mb-4 text-left flex items-center gap-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'text-white-300' : 'text-white-700'}`}>
+            <h3 className={`text-3xl font-extrabold mb-4 text-left flex items-center gap-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>
                 📸 Gallery
             </h3>
 

@@ -40,7 +40,7 @@ export default function InfoSection() {
     >
       <div className="space-y-4">
         <h3
-          className={`text-2xl font-extrabold text-center transition-colors duration-500 ${currentTheme === "dark" ? "text-emerald-300" : "text-emerald-700"
+          className={`text-3xl font-extrabold text-center transition-colors duration-500 ${currentTheme === "dark" ? "text-emerald-300" : "text-emerald-700"
             }`}
         >
           Keep Our Sea of Galilee Clean! 💧

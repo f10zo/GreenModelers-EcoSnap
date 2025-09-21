@@ -514,9 +514,18 @@ export default function UploadForm({ onUploadSuccess }) {
     const isDarkMode = currentTheme.includes('dark');
 
     return (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className={`w-full max-w-4xl rounded-2xl shadow-2xl p-6 relative backdrop-blur-sm transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/50 text-white' : 'bg-white/70 text-black'}`}>
-
+            <div
+                className="w-full max-w-4xl rounded-3xl p-6 relative overflow-y-auto border-2 shadow-2xl transition-colors duration-500"
+                style={{
+                    backdropFilter: "blur(12px)", // stronger blur for outer container
+                    backgroundColor:
+                        currentTheme === "dark"
+                            ? "rgba(15, 23, 42, 0.7)" // dark semi-transparent
+                            : "rgba(255, 255, 255, 0.35)", // light semi-transparent
+                    borderColor: currentTheme === "dark" ? "#22c55e" : "#4ade80",
+                    color: currentTheme === "dark" ? "#fff" : "#000",
+                }}
+            >
                 {/* Map Modal */}
                 {isMapVisible && (
                     <Suspense fallback={<div>Loading map...</div>}>
@@ -537,8 +546,8 @@ export default function UploadForm({ onUploadSuccess }) {
                 )}
 
                 {/* Header */}
-                <h2 className={`text-3xl font-bold mb-6 text-center ${currentTheme.includes('dark') ? 'text-white' : 'text-gray-800'}`}>
-                    Upload Report
+                <h2 className={`text-3xl font-bold mb-6 text-center ${currentTheme === "dark" ? "text-emerald-300" : "text-emerald-700"}`}>
+                    <strong>Upload Report</strong>
                 </h2>
 
                 {/* Camera / Upload Section */}
@@ -574,9 +583,9 @@ export default function UploadForm({ onUploadSuccess }) {
                                 onDragLeave={handleDragLeave}
                                 onDrop={handleDrop}
                             >
-                                <FiUpload className={`w-8 h-8 ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                                <p className={`text-sm ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Drag and drop a photo here,</p>
-                                <p className={`text-sm ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>or click to choose one.</p>
+                                <FiUpload className={`w-8 h-8 transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`} />
+                                <p className={`text-sm transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>Drag and drop a photo here,</p>
+                                <p className={`text-sm transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>or click to choose one.</p>
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -588,7 +597,8 @@ export default function UploadForm({ onUploadSuccess }) {
                             <div className="flex gap-2 justify-center mt-2 w-full max-w-md mx-auto">
                                 <button
                                     onClick={() => document.querySelector('input[type="file"]').click()}
-                                    className="flex-1 py-2 px-4 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors duration-200"
+                                    className={`flex-1 py-2 px-4 rounded-lg border transition-colors duration-200 focus:outline-none focus:ring-2
+    ${currentTheme === 'dark' ? 'bg-gray-800 text-emerald-300 border-gray-600 hover:bg-gray-700 focus:ring-emerald-500' : 'bg-white text-emerald-700 border-gray-300 hover:bg-gray-100 focus:ring-emerald-500'}`}
                                 >
                                     Choose Photo
                                 </button>
@@ -641,7 +651,7 @@ export default function UploadForm({ onUploadSuccess }) {
                                 setSearchStatusMessage("");
                             }
                         }}
-                        className={`w-full border rounded-lg p-2 focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`}
+                        className={`w-full border rounded-lg p-2 focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-emerald-300' : 'bg-white/70 text-emerald-700'}`}
                     >
                         <option value="">Select a Beach</option>
                         {galileeBeaches.map((beach) => (
@@ -652,7 +662,7 @@ export default function UploadForm({ onUploadSuccess }) {
                     <div className="flex gap-2 items-center">
                         <textarea
                             placeholder="Or Enter Location Manually (Address, City, Zip Code)"
-                            className={`flex-1 border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white placeholder-gray-400' : 'bg-white/70 text-black placeholder-gray-500'}`}
+                            className={`flex-1 border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-emerald-300 placeholder-gray-400' : 'bg-white/70 text-emerald-700 placeholder-gray-500'}`}
                             value={manualLocation}
                             onChange={(e) => { setManualLocation(e.target.value); setLocation(""); setCoordinates(""); setApiErrorMessage(""); }}
                             rows="2"
@@ -661,9 +671,10 @@ export default function UploadForm({ onUploadSuccess }) {
                         <button onClick={() => onSearchLocation(manualLocation)} className="px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm">Search</button>
                     </div>
 
-                    <div className={`flex-1 p-2 ${currentTheme === 'dark' ? 'text-white' : 'text-black'}`}>
-                        {coordinates || "Coordinates will appear here"}
+                    <div className={`flex-1 p-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                        {coordinates || "Coordinates:"}
                     </div>
+                    
                     {searchStatusMessage && <p className={`text-sm text-center font-semibold ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-700'}`}>{searchStatusMessage}</p>}
                     {apiErrorMessage && <p className="text-red-500 text-sm text-center">{apiErrorMessage}</p>}
 
@@ -673,14 +684,18 @@ export default function UploadForm({ onUploadSuccess }) {
 
                     {/* Date & Time */}
                     <div className="flex gap-2 items-center text-sm">
-                        <label className="font-semibold">Date:</label>
+                        <label className={`font-semibold transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                            Date:
+                        </label>
                         <input type="date" className={`border rounded-lg p-1 flex-1 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`} value={dateValue} onChange={(e) => setDateValue(e.target.value)} />
                         <input type="time" className={`border rounded-lg p-1 flex-1 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`} value={timeValue} onChange={(e) => setTimeValue(e.target.value)} />
-                        <button type="button" className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm" onClick={setCurrentDateTime}>Now</button>
+                        <button type="button" className={`px-3 py-2 text-white rounded-lg text-sm font-bold transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-emerald-600 hover:bg-emerald-700'}`} onClick={setCurrentDateTime}>Now</button>
                     </div>
 
                     {/* Urgency */}
-                    <label className="font-semibold block mt-2 text-lg">Select the Urgency of this Report:</label>
+                    <label className={`font-semibold block mt-2 text-lg transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                        Select the Urgency of this Report:
+                    </label>
                     <div className="flex gap-2">
                         {["Low", "Medium", "High"].map((level) => {
                             const colors = { Low: "bg-green-400 text-green-900", Medium: "bg-yellow-400 text-yellow-900", High: "bg-red-400 text-red-900" };
@@ -728,7 +743,5 @@ export default function UploadForm({ onUploadSuccess }) {
                     )}
                 </div>
             </div>
-        </div>
     );
-
 }

@@ -32,7 +32,7 @@ export default function PickedLocationMap({ lat, lon, locationName }) {
     const position = [parseFloat(lat), parseFloat(lon)];
 
     return (
-        <div className="w-full h-full rounded-2xl overflow-hidden">
+        <div className="w-full h-[400px] rounded-2xl overflow-hidden">
             <MapContainer
                 center={position}
                 zoom={14}
@@ -52,5 +52,6 @@ export default function PickedLocationMap({ lat, lon, locationName }) {
                 </Marker>
             </MapContainer>
         </div>
+
     );
 }

@@ -94,7 +94,7 @@ const galileeBeaches = [
     { id: 'shikmim', name: 'שקמים', lat: 32.8680, lon: 35.5750 },
     { id: 'hukuk-north', name: 'חוקוק צפון', lat: 32.8600, lon: 35.5400 },
     { id: 'shizaf-rotem', name: 'שיזף-רותם', lat: 32.8002, lon: 35.6411 },
-    { id: 'hanion-haon', name: 'חניון האון', lat: 32.7660, lon: 35.6290 },
+    { id: 'hanion-haon', name: 'חניון האון', lat: 32.7267, lon: 35.6226 },
     { id: 'hanion-yarden-kinneret', name: 'חניון ירדן כינרת', lat: 32.7060, lon: 35.5890 },
     { id: 'the-diamond', name: 'הדאימונד', lat: 32.8346, lon: 35.6422 },
     { id: 'shitaim', name: 'שיטים', lat: 32.7600, lon: 35.6400 },
@@ -135,11 +135,9 @@ export default function UploadForm({ onUploadSuccess }) {
     const [coordinates, setCoordinates] = useState("");
     const [apiErrorMessage, setApiErrorMessage] = useState("");
     const [searchStatusMessage, setSearchStatusMessage] = useState("");
-    const [currentTheme, setCurrentTheme] = useState('light');
     const { dateInput, time } = getCurrentDateTime();
     const [dateValue, setDateValue] = useState(dateInput);
     const [timeValue, setTimeValue] = useState(time);
-    const [fileInputKey, setFileInputKey] = useState(Date.now());
     const [currentUploadTask, setCurrentUploadTask] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
@@ -150,16 +148,20 @@ export default function UploadForm({ onUploadSuccess }) {
     const LOCATIONIQ_API_KEY = process.env.LOCATIONIQ_API_KEY;
 
     const [status, setStatus] = useState("");
-
+    const [fileInputKey, setFileInputKey] = useState(() => Date.now());
+    const [currentTheme, setCurrentTheme] = useState("light");
 
     useEffect(() => {
-        const observer = new MutationObserver(() => {
-            const newTheme = document.documentElement.className;
-            setCurrentTheme(newTheme);
-        });
-        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-        return () => observer.disconnect();
+        if (typeof document !== "undefined") {
+            const observer = new MutationObserver(() => {
+                const newTheme = document.documentElement.className || "light";
+                setCurrentTheme(newTheme);
+            });
+            observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+            return () => observer.disconnect();
+        }
     }, []);
+
 
     const handleFileChange = async (f) => {
         if (f) {
@@ -235,13 +237,13 @@ export default function UploadForm({ onUploadSuccess }) {
 
     const showOnMap = () => {
         saveFormState();
-        const locationNameForMap = manualLocation || galileeBeaches.find(b => b.id === location)?.name || "";
-        if (coordinates && coordinates.trim() !== "Coordinates not found" && coordinates.trim() !== "Error converting address" && coordinates.trim() !== "Error getting real-time coordinates") {
-            const { lat, lon } = getCoords(coordinates);
+        if (coordinates && coordinates.includes("Lat:") && coordinates.includes("Lon:")) {
             setIsMapVisible(true);
         } else {
-            setSearchStatusMessage("Please find coordinates before showing on map.");
+            setSearchStatusMessage("Please find or select a location with valid coordinates before showing on the map.");
         }
+        console.log("Coordinates:", coordinates, getCoords(coordinates));
+
     };
 
     const setCurrentDateTime = () => {
@@ -372,6 +374,9 @@ export default function UploadForm({ onUploadSuccess }) {
                         const newLocationName = addressParts.join(', ').trim();
                         setManualLocation(newLocationName || "Unknown Location");
                         setSearchStatusMessage("Location found!");
+
+                        // THIS IS THE LINE THAT MAKES THE MAP APPEAR
+                        setIsMapVisible(true);
                     } else {
                         setManualLocation("Unknown Location");
                         setSearchStatusMessage("Location name not found.");
@@ -389,36 +394,6 @@ export default function UploadForm({ onUploadSuccess }) {
         } else {
             setSearchStatusMessage("Geolocation is not supported by your browser");
             setCoordinates("");
-        }
-    };
-
-    const onSearchLocation = async () => {
-        if (manualLocation.trim() === "") {
-            setSearchStatusMessage("Please enter a location to search.");
-            return;
-        }
-        setSearchStatusMessage("Searching for coordinates...");
-
-        const searchAddress = manualLocation;
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchAddress)}&format=json&bounded=1&viewbox=35.5,32.65,35.7,32.95`;
-
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (data.length > 0) {
-                const { lat, lon, display_name } = data[0];
-                setCoordinates(`Lat: ${parseFloat(lat).toFixed(5)}, Lon: ${parseFloat(lon).toFixed(5)}`);
-                setManualLocation(display_name);
-                setSearchStatusMessage("Location found!");
-            } else {
-                setSearchStatusMessage("No coordinates found for this location.");
-                setCoordinates("Coordinates not found");
-            }
-        } catch (err) {
-            console.error("Geocoding error:", err);
-            setSearchStatusMessage("Error finding coordinates. Please try again.");
-            setCoordinates("Error finding coordinates");
         }
     };
 
@@ -514,234 +489,267 @@ export default function UploadForm({ onUploadSuccess }) {
     const isDarkMode = currentTheme.includes('dark');
 
     return (
-            <div
-                className="w-full max-w-4xl rounded-3xl p-6 relative overflow-y-auto border-2 shadow-2xl transition-colors duration-500"
-                style={{
-                    backdropFilter: "blur(12px)", // stronger blur for outer container
-                    backgroundColor:
-                        currentTheme === "dark"
-                            ? "rgba(15, 23, 42, 0.7)" // dark semi-transparent
-                            : "rgba(255, 255, 255, 0.35)", // light semi-transparent
-                    borderColor: currentTheme === "dark" ? "#22c55e" : "#4ade80",
-                    color: currentTheme === "dark" ? "#fff" : "#000",
-                }}
-            >
-                {/* Map Modal */}
+        <div
+            className="w-full max-w-4xl rounded-3xl p-6 relative overflow-y-auto border-2 shadow-2xl transition-colors duration-500"
+            style={{
+                backdropFilter: "blur(12px)", // stronger blur for outer container
+                backgroundColor:
+                    currentTheme === "dark"
+                        ? "rgba(15, 23, 42, 0.7)" // dark semi-transparent
+                        : "rgba(255, 255, 255, 0.35)", // light semi-transparent
+                borderColor: currentTheme === "dark" ? "#22c55e" : "#4ade80",
+                color: currentTheme === "dark" ? "#fff" : "#000",
+            }}
+        >
+            {/* Map Modal */}
+            {isMapVisible && (
+                <Suspense fallback={<div>Loading map...</div>}>
+                    <PickedLocationMap
+                        lat={getCoords(coordinates).lat}
+                        lon={getCoords(coordinates).lon}
+                        locationName={manualLocation || galileeBeaches.find(b => b.id === location)?.name || "Selected Location"}
+                    />
+                    <button
+                        onClick={() => setIsMapVisible(false)}
+                        className="absolute top-4 right-4 z-[1000] p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-200"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </Suspense>
+            )}
+
+            {/* Header */}
+            <h2 className={`text-3xl font-bold mb-6 text-center ${currentTheme === "dark" ? "text-emerald-300" : "text-emerald-700"}`}>
+                <strong>Upload Report</strong>
+            </h2>
+
+            {/* Camera / Upload Section */}
+            <div className="space-y-4">
+                {isCameraActive ? (
+                    <div className="flex flex-col items-center w-full max-w-md mx-auto">
+                        <video
+                            ref={videoRef}
+                            className="w-full rounded-lg mb-4"
+                            autoPlay
+                            playsInline
+                        ></video>
+                        <div className="flex gap-2 w-full">
+                            <button
+                                onClick={() => setIsCameraActive(false)}
+                                className="flex-1 py-2 px-4 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors duration-200"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleCapturePhoto}
+                                className="flex-1 py-2 px-4 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors duration-200"
+                            >
+                                <FiCamera className="inline-block mr-2" /> Take Photo
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        <div
+                            className={`relative flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-4 ${currentTheme === 'dark' ? 'bg-black/30 border-gray-600' : 'bg-white/50 border-gray-300'} ${isDragging ? "border-blue-500 bg-blue-100" : ""}`}
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop}
+                        >
+                            <FiUpload className={`w-8 h-8 transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`} />
+                            <p className={`text-sm transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>Drag and drop a photo here,</p>
+                            <p className={`text-sm transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>or click to choose one.</p>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleFileChange(e.target.files[0])}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                key={fileInputKey}
+                            />
+                        </div>
+                        <div className="flex gap-2 justify-center mt-2 w-full max-w-md mx-auto">
+                            <button
+                                onClick={() => document.querySelector('input[type="file"]').click()}
+                                className={`flex-1 py-2 px-4 rounded-lg border transition-colors duration-200 focus:outline-none focus:ring-2
+    ${currentTheme === 'dark' ? 'bg-gray-800 text-emerald-300 border-gray-600 hover:bg-gray-700 focus:ring-emerald-500' : 'bg-white text-emerald-700 border-gray-300 hover:bg-gray-100 focus:ring-emerald-500'}`}
+                            >
+                                Choose Photo
+                            </button>
+                            <button
+                                onClick={startCamera}
+                                className="flex-1 py-2 px-4 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors duration-200"
+                            >
+                                <FiCamera className="inline-block mr-2" /> Take Photo
+                            </button>
+                        </div>
+                    </>
+                )}
+
+                <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
+                {preview && (
+                    <div className="relative border rounded-lg overflow-hidden">
+                        <Image
+                            src={preview}
+                            alt="preview"
+                            width={600}
+                            height={400}
+                            className="w-full h-auto object-cover"
+                        />
+                        <button
+                            onClick={handleCancelPreview}
+                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full transition-colors duration-200"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* Location selection, date/time, urgency, description */}
+            <div className="flex flex-col gap-3 mt-4">
+                {/* Location & manual input */}
+                <select
+                    value={location}
+                    onChange={(e) => {
+                        const selectedValue = e.target.value;
+                        setLocation(selectedValue);
+                        const selectedBeach = galileeBeaches.find(beach => beach.id === selectedValue);
+                        if (selectedBeach) {
+                            setCoordinates(`Lat: ${selectedBeach.lat}, Lon: ${selectedBeach.lon}`);
+                            setManualLocation(selectedBeach.name);
+                            setSearchStatusMessage(`Coordinates for ${selectedBeach.name} updated.`);
+                        } else {
+                            setCoordinates("");
+                            setManualLocation("");
+                            setSearchStatusMessage("");
+                        }
+                    }}
+                    className={`w-full border rounded-lg p-2 focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-gray-800 text-emerald-300' : 'bg-white/70 text-emerald-700'}`}
+                >
+                    <option value="">Select a Beach</option>
+                    {galileeBeaches.map((beach) => (
+                        <option
+                            key={beach.id}
+                            value={beach.id}
+                            style={{
+                                backgroundColor: currentTheme === 'dark' ? '#1f2937' : '#ffffff',
+                                color: currentTheme === 'dark' ? '#6ee7b7' : '#047857' // Updated color for light mode
+                            }}
+                        >
+                            {beach.name}
+                        </option>
+                    ))}
+                </select>
+
+                <div className="flex gap-2 items-center">
+                    <textarea
+                        placeholder="Or Enter Location Manually (Address, City, Zip Code)"
+                        className={`flex-1 border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-emerald-300 placeholder-gray-400' : 'bg-white/70 text-emerald-700 placeholder-gray-500'}`}
+                        value={manualLocation}
+                        onChange={(e) => { setManualLocation(e.target.value); setLocation(""); setCoordinates(""); setApiErrorMessage(""); }}
+                        rows="2"
+                    />
+                    <button onClick={handleAutoLocation} className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">Auto</button>
+                </div>
+
+                <div className={`flex-1 p-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                    {coordinates || "Coordinates:"}
+                </div>
+
+                {searchStatusMessage && <p className={`text-sm text-center font-semibold ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-700'}`}>{searchStatusMessage}</p>}
+                {apiErrorMessage && <p className="text-red-500 text-sm text-center">{apiErrorMessage}</p>}
+
+                <button
+                    onClick={showOnMap}
+                    className="w-full py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 font-semibold transition-colors duration-200"
+                >
+                    Show on Map 🗺️
+                </button>
+
+                {/* Inline Map - shows below the button */}
                 {isMapVisible && (
-                    <Suspense fallback={<div>Loading map...</div>}>
+                    <div className="relative w-full my-4 h-[300px] rounded-2xl overflow-hidden shadow-lg">
+                        {/* Close button */}
+                        <button
+                            onClick={() => setIsMapVisible(false)}
+                            className="absolute top-2 right-2 z-[1000] bg-white text-red-600 rounded-full p-1 shadow hover:bg-red-100"
+                        >
+                            ✖
+                        </button>
+
                         <PickedLocationMap
                             lat={getCoords(coordinates).lat}
                             lon={getCoords(coordinates).lon}
-                            locationName={manualLocation || galileeBeaches.find(b => b.id === location)?.name || ""}
+                            locationName={location}
                         />
-                        <button
-                            onClick={() => setIsMapVisible(false)}
-                            className="absolute top-4 right-4 z-[1000] p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-200"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </Suspense>
+                    </div>
                 )}
 
-                {/* Header */}
-                <h2 className={`text-3xl font-bold mb-6 text-center ${currentTheme === "dark" ? "text-emerald-300" : "text-emerald-700"}`}>
-                    <strong>Upload Report</strong>
-                </h2>
 
-                {/* Camera / Upload Section */}
-                <div className="space-y-4">
-                    {isCameraActive ? (
-                        <div className="flex flex-col items-center w-full max-w-md mx-auto">
-                            <video
-                                ref={videoRef}
-                                className="w-full rounded-lg mb-4"
-                                autoPlay
-                                playsInline
-                            ></video>
-                            <div className="flex gap-2 w-full">
-                                <button
-                                    onClick={() => setIsCameraActive(false)}
-                                    className="flex-1 py-2 px-4 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors duration-200"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleCapturePhoto}
-                                    className="flex-1 py-2 px-4 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors duration-200"
-                                >
-                                    <FiCamera className="inline-block mr-2" /> Take Photo
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        <>
-                            <div
-                                className={`relative flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-4 ${currentTheme === 'dark' ? 'bg-black/30 border-gray-600' : 'bg-white/50 border-gray-300'} ${isDragging ? "border-blue-500 bg-blue-100" : ""}`}
-                                onDragOver={handleDragOver}
-                                onDragLeave={handleDragLeave}
-                                onDrop={handleDrop}
-                            >
-                                <FiUpload className={`w-8 h-8 transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`} />
-                                <p className={`text-sm transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>Drag and drop a photo here,</p>
-                                <p className={`text-sm transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>or click to choose one.</p>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => handleFileChange(e.target.files[0])}
-                                    className="absolute inset-0 opacity-0 cursor-pointer"
-                                    key={fileInputKey}
-                                />
-                            </div>
-                            <div className="flex gap-2 justify-center mt-2 w-full max-w-md mx-auto">
-                                <button
-                                    onClick={() => document.querySelector('input[type="file"]').click()}
-                                    className={`flex-1 py-2 px-4 rounded-lg border transition-colors duration-200 focus:outline-none focus:ring-2
-    ${currentTheme === 'dark' ? 'bg-gray-800 text-emerald-300 border-gray-600 hover:bg-gray-700 focus:ring-emerald-500' : 'bg-white text-emerald-700 border-gray-300 hover:bg-gray-100 focus:ring-emerald-500'}`}
-                                >
-                                    Choose Photo
-                                </button>
-                                <button
-                                    onClick={startCamera}
-                                    className="flex-1 py-2 px-4 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors duration-200"
-                                >
-                                    <FiCamera className="inline-block mr-2" /> Take Photo
-                                </button>
-                            </div>
-                        </>
-                    )}
-
-                    <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
-                    {preview && (
-                        <div className="relative border rounded-lg overflow-hidden">
-                            <Image
-                                src={preview}
-                                alt="preview"
-                                width={600}
-                                height={400}
-                                className="w-full h-auto object-cover"
-                            />
-                            <button
-                                onClick={handleCancelPreview}
-                                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full transition-colors duration-200"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                {/* Location selection, date/time, urgency, description */}
-                <div className="flex flex-col gap-3 mt-4">
-                    {/* Location & manual input */}
-                    <select
-                        value={location}
-                        onChange={(e) => {
-                            const selectedValue = e.target.value;
-                            setLocation(selectedValue);
-                            const selectedBeach = galileeBeaches.find(beach => beach.id === selectedValue);
-                            if (selectedBeach) {
-                                setCoordinates(`Lat: ${selectedBeach.lat}, Lon: ${selectedBeach.lon}`);
-                                setSearchStatusMessage(`Coordinates for ${selectedBeach.name} updated.`);
-                            } else {
-                                setCoordinates("");
-                                setSearchStatusMessage("");
-                            }
-                        }}
-                        className={`w-full border rounded-lg p-2 focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-emerald-300' : 'bg-white/70 text-emerald-700'}`}
-                    >
-                        <option value="">Select a Beach</option>
-                        {galileeBeaches.map((beach) => (
-                            <option key={beach.id} value={beach.id}>{beach.name}</option>
-                        ))}
-                    </select>
-
-                    <div className="flex gap-2 items-center">
-                        <textarea
-                            placeholder="Or Enter Location Manually (Address, City, Zip Code)"
-                            className={`flex-1 border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-emerald-300 placeholder-gray-400' : 'bg-white/70 text-emerald-700 placeholder-gray-500'}`}
-                            value={manualLocation}
-                            onChange={(e) => { setManualLocation(e.target.value); setLocation(""); setCoordinates(""); setApiErrorMessage(""); }}
-                            rows="2"
-                        />
-                        <button onClick={handleAutoLocation} className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">Auto</button>
-                        <button onClick={() => onSearchLocation(manualLocation)} className="px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm">Search</button>
-                    </div>
-
-                    <div className={`flex-1 p-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>
-                        {coordinates || "Coordinates:"}
-                    </div>
-                    
-                    {searchStatusMessage && <p className={`text-sm text-center font-semibold ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-700'}`}>{searchStatusMessage}</p>}
-                    {apiErrorMessage && <p className="text-red-500 text-sm text-center">{apiErrorMessage}</p>}
-
-                    <button onClick={showOnMap} className="w-full py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 font-semibold transition-colors duration-200">
-                        Show on Map 🗺️
-                    </button>
-
-                    {/* Date & Time */}
-                    <div className="flex gap-2 items-center text-sm">
-                        <label className={`font-semibold transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>
-                            Date:
-                        </label>
-                        <input type="date" className={`border rounded-lg p-1 flex-1 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`} value={dateValue} onChange={(e) => setDateValue(e.target.value)} />
-                        <input type="time" className={`border rounded-lg p-1 flex-1 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`} value={timeValue} onChange={(e) => setTimeValue(e.target.value)} />
-                        <button type="button" className={`px-3 py-2 text-white rounded-lg text-sm font-bold transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-emerald-600 hover:bg-emerald-700'}`} onClick={setCurrentDateTime}>Now</button>
-                    </div>
-
-                    {/* Urgency */}
-                    <label className={`font-semibold block mt-2 text-lg transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>
-                        Select the Urgency of this Report:
+                {/* Date & Time */}
+                <div className="flex gap-2 items-center text-sm">
+                    <label className={`font-semibold transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                        Date:
                     </label>
-                    <div className="flex gap-2">
-                        {["Low", "Medium", "High"].map((level) => {
-                            const colors = { Low: "bg-green-400 text-green-900", Medium: "bg-yellow-400 text-yellow-900", High: "bg-red-400 text-red-900" };
-                            const selectedColors = { Low: "bg-green-600 text-white", Medium: "bg-yellow-600 text-black", High: "bg-red-600 text-white" };
-                            return (
-                                <button
-                                    key={level}
-                                    className={`flex-1 py-2 rounded-lg font-semibold transition-all duration-200 ${pollutionLevel === level ? selectedColors[level] : colors[level]}`}
-                                    onClick={() => setPollutionLevel(level)}
-                                >
-                                    {level}
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    {/* Description */}
-                    <textarea
-                        placeholder="Description"
-                        className={`w-full border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white placeholder-gray-400' : 'bg-white/70 text-black placeholder-gray-500'}`}
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                    />
-
-                    {/* Progress & Submit */}
-                    {progress > 0 && (
-                        <div className="flex items-center gap-3">
-                            <div className="flex-1 w-full bg-gray-200 rounded-full h-3">
-                                <div className="bg-green-600 h-3 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
-                            </div>
-                            <button onClick={handleCancel} className="bg-red-500 text-white text-sm px-3 py-1 rounded-lg hover:bg-red-600 font-semibold transition-colors duration-200">
-                                Cancel
-                            </button>
-                        </div>
-                    )}
-
-                    <button onClick={handleUpload} className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 font-semibold transition-colors duration-200">
-                        Submit Report
-                    </button>
-
-                    {successMessage && (
-                        <div className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-100" role="alert">
-                            <span className="font-medium">Success!</span> {successMessage}
-                        </div>
-                    )}
+                    <input type="date" className={`border rounded-lg p-1 flex-1 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`} value={dateValue} onChange={(e) => setDateValue(e.target.value)} />
+                    <input type="time" className={`border rounded-lg p-1 flex-1 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white' : 'bg-white/70 text-black'}`} value={timeValue} onChange={(e) => setTimeValue(e.target.value)} />
+                    <button type="button" className={`px-3 py-2 text-white rounded-lg text-sm font-bold transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-emerald-600 hover:bg-emerald-700'}`} onClick={setCurrentDateTime}>Now</button>
                 </div>
+
+                {/* Urgency */}
+                <label className={`font-semibold block mt-2 text-lg transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                    Select the Urgency of this Report:
+                </label>
+                <div className="flex gap-2">
+                    {["Low", "Medium", "High"].map((level) => {
+                        const colors = { Low: "bg-green-400 text-green-900", Medium: "bg-yellow-400 text-yellow-900", High: "bg-red-400 text-red-900" };
+                        const selectedColors = { Low: "bg-green-600 text-white", Medium: "bg-yellow-600 text-black", High: "bg-red-600 text-white" };
+                        return (
+                            <button
+                                key={level}
+                                className={`flex-1 py-2 rounded-lg font-semibold transition-all duration-200 ${pollutionLevel === level ? selectedColors[level] : colors[level]}`}
+                                onClick={() => setPollutionLevel(level)}
+                            >
+                                {level}
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* Description */}
+                <textarea
+                    placeholder="Description"
+                    className={`w-full border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-white placeholder-gray-400' : 'bg-white/70 text-black placeholder-gray-500'}`}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                />
+
+                {/* Progress & Submit */}
+                {progress > 0 && (
+                    <div className="flex items-center gap-3">
+                        <div className="flex-1 w-full bg-gray-200 rounded-full h-3">
+                            <div className="bg-green-600 h-3 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                        </div>
+                        <button onClick={handleCancel} className="bg-red-500 text-white text-sm px-3 py-1 rounded-lg hover:bg-red-600 font-semibold transition-colors duration-200">
+                            Cancel
+                        </button>
+                    </div>
+                )}
+
+                <button onClick={handleUpload} className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 font-semibold transition-colors duration-200">
+                    Submit Report
+                </button>
+
+                {successMessage && (
+                    <div className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-100" role="alert">
+                        <span className="font-medium">Success!</span> {successMessage}
+                    </div>
+                )}
             </div>
+        </div>
     );
 }

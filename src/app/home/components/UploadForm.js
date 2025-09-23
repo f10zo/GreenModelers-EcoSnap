@@ -243,7 +243,6 @@ export default function UploadForm({ onUploadSuccess }) {
             setSearchStatusMessage("Please find or select a location with valid coordinates before showing on the map.");
         }
         console.log("Coordinates:", coordinates, getCoords(coordinates));
-
     };
 
     const setCurrentDateTime = () => {
@@ -280,6 +279,9 @@ export default function UploadForm({ onUploadSuccess }) {
     };
 
     useEffect(() => {
+        // Reset coordinates when page loads
+        setCoordinates("Lat: 00, Lon: 00");
+
         const handlePaste = (e) => {
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
             for (const item of items) {
@@ -292,11 +294,14 @@ export default function UploadForm({ onUploadSuccess }) {
                 }
             }
         };
+
         document.addEventListener("paste", handlePaste);
+
         return () => {
             document.removeEventListener("paste", handlePaste);
         };
     }, []);
+
 
     const startCamera = async () => {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {

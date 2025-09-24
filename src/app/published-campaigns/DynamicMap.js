@@ -3,13 +3,13 @@
 
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { useEffect, useState } from 'react';
 
 // Fix default marker icon
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconRetinaUrl: 'https://https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
@@ -27,6 +27,20 @@ const useClientTheme = () => {
     }, []);
     return theme;
 };
+
+// New component to handle map position updates
+function MapUpdater({ center }) {
+    const map = useMap();
+    useEffect(() => {
+        if (center) {
+            map.flyTo(center, 11, {
+                animate: true,
+                duration: 1.5,
+            });
+        }
+    }, [center, map]);
+    return null;
+}
 
 const calculateCenter = (campaigns) => {
     const valid = campaigns.filter(c => typeof c.locationLat === 'number' && typeof c.locationLon === 'number');
@@ -46,7 +60,8 @@ export default function DynamicMap({ campaigns = [] }) {
     return (
         <div className="w-full h-[70vh] rounded-2xl overflow-hidden">
             {mapCenter && (
-                <MapContainer center={mapCenter} zoom={11} scrollWheelZoom className="w-full h-full">
+                <MapContainer center={mapCenter} zoom={11} scrollWheelZoom={false} className="w-full h-full">
+                    <MapUpdater center={mapCenter} />
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

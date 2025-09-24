@@ -45,18 +45,27 @@ const dataURLtoBlob = (dataurl) => {
 };
 
 
-// Helper function for geocoding
-const geocodeAddress = async (latitude, longitude, LOCATIONIQ_API_KEY) => {
+// Helper function for reverse geocoding using OpenStreetMap Nominatim
+const geocodeAddress = async (latitude, longitude) => {
     if (!latitude || !longitude) return null;
-    try {
-        const response = await fetch(`https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_API_KEY}&lat=${latitude}&lon=${longitude}&format=json`);
-        if (!response.ok) throw new Error('Failed to fetch location data');
-        const data = await response.json();
 
-        if (data.address) {
-            const { lat, lon } = data;
-            const { road, city, postcode, country } = data.address;
-            return { lat, lon, road, city, postcode, country };
+    try {
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+            {
+                headers: {
+                    "User-Agent": "EcoSnap", // Nominatim requires a User-Agent
+                },
+            }
+        );
+
+        if (!response.ok) throw new Error(`Failed to fetch location data: ${response.status}`);
+        const data = await response.json();
+        // console.log("Nominatim data:", data);
+
+        if (data && data.address) {
+            const { road, city, town, village, postcode, country } = data.address;
+            return { road, city: city || town || village, postcode, country, display_name: data.display_name };
         } else {
             return null;
         }
@@ -65,61 +74,48 @@ const geocodeAddress = async (latitude, longitude, LOCATIONIQ_API_KEY) => {
         return null;
     }
 };
-const getCoords = (coordString) => {
-    if (!coordString || !coordString.includes("Lat:") || !coordString.includes("Lon:")) {
-        console.error("Invalid coordinate string format:", coordString);
-        return { lat: null, lon: null };
-    }
-    const parts = coordString.split(',');
-    const lat = parseFloat(parts[0].split(':')[1].trim());
-    const lon = parseFloat(parts[1].split(':')[1].trim());
-    return { lat, lon };
-};
 
 const galileeBeaches = [
-    { id: 'amnion-bay', name: 'מפרץ אמנון', lat: 32.89112, lon: 35.596733 },
-    { id: 'kinneret', name: 'כינרת', lat: 32.7935, lon: 35.5562 },
-    { id: 'duga', name: 'דוגה', lat: 32.8597, lon: 35.6473 },
-    { id: 'dugit', name: 'דוגית', lat: 32.8499, lon: 35.6489 },
-    { id: 'golan', name: 'גולן', lat: 32.8485, lon: 35.6496 },
-    { id: 'tzaalon', name: 'צאלון', lat: 32.8400, lon: 35.6500 },
-    { id: 'kursi', name: 'כורסי', lat: 32.8248, lon: 35.6488 },
-    { id: 'lebanon', name: 'לבנון', lat: 32.8200, lon: 35.6500 },
-    { id: 'halukim', name: 'חלוקים', lat: 32.7980, lon: 35.6190 },
-    { id: 'gofra', name: 'גופרה', lat: 32.8033, lon: 35.6436 },
-    { id: 'susita', name: 'סוסיתא', lat: 32.7900, lon: 35.6400 },
-    { id: 'tzemach', name: 'צמח', lat: 32.7110, lon: 35.5800 },
-    { id: 'tzinbari', name: 'צינברי', lat: 32.7400, lon: 35.5700 },
-    { id: 'beriniki', name: 'ברניקי', lat: 32.7616, lon: 35.5579 },
-    { id: 'shikmim', name: 'שקמים', lat: 32.8680, lon: 35.5750 },
-    { id: 'hukuk-north', name: 'חוקוק צפון', lat: 32.8600, lon: 35.5400 },
-    { id: 'shizaf-rotem', name: 'שיזף-רותם', lat: 32.8002, lon: 35.6411 },
-    { id: 'hanion-haon', name: 'חניון האון', lat: 32.7267, lon: 35.6226 },
-    { id: 'hanion-yarden-kinneret', name: 'חניון ירדן כינרת', lat: 32.7060, lon: 35.5890 },
-    { id: 'the-diamond', name: 'הדאימונד', lat: 32.8346, lon: 35.6422 },
-    { id: 'shitaim', name: 'שיטים', lat: 32.7600, lon: 35.6400 },
-    { id: 'deganya', name: 'דגניה', lat: 32.7100, lon: 35.5800 },
-    { id: 'hadekel', name: 'הדקל', lat: 32.7670, lon: 35.5450 },
-    { id: 'gino', name: 'ג\'ינו', lat: 32.8800, lon: 35.5700 },
-    { id: 'sfirit', name: 'ספירית', lat: 32.8800, lon: 35.5800 },
-    { id: 'ein-gev-resort', name: 'נופש עין-גב', lat: 32.7830, lon: 35.6260 },
-    { id: 'haon-resort', name: 'נופש האון', lat: 32.7660, lon: 35.6290 },
-    { id: 'maagan-eden', name: 'מעגן עדן', lat: 32.7210, lon: 35.5990 },
-    { id: 'the-separated-beach', name: 'החוף הנפרד', lat: 32.8020, lon: 35.5480 },
-    { id: 'hamei-tiberias', name: 'חמי טבריה', lat: 32.7700, lon: 35.5500 },
-    { id: 'ganim', name: 'גנים', lat: 32.7800, lon: 35.5500 },
-    { id: 'sironit', name: 'סירונית', lat: 32.7930, lon: 35.5450 },
-    { id: 'gai', name: 'גיא', lat: 32.7800, lon: 35.5400 },
-    { id: 'gali-kinneret-rimonim', name: 'גלי כינרת רימונים', lat: 32.7859, lon: 35.5440 },
-    { id: 'the-promenade', name: 'הטיילת', lat: 32.7870, lon: 35.5390 },
-    { id: 'shket-leonardo', name: 'שקט לאונרדו', lat: 32.7985, lon: 35.5395 },
-    { id: 'hatekhelet', name: 'התכלת', lat: 32.7950, lon: 35.5470 },
-    { id: 'raket', name: 'רקת (בורה בורה)', lat: 32.8000, lon: 35.5300 },
-    { id: 'green', name: 'גרין', lat: 32.8100, lon: 35.5300 },
-    { id: 'restel', name: 'רסטל', lat: 32.8200, lon: 35.5200 },
-    { id: 'nof-ginosar', name: 'נוף גינוסר', lat: 32.8444, lon: 35.5228 }
+    { id: 'amnion-bay', name: 'מפרץ אמנון', english: 'Amnion Bay', lat: 32.89112, lon: 35.596733 },
+    { id: 'beriniki', name: 'ברניקי', english: 'Beriniki', lat: 32.7616, lon: 35.5579 },
+    { id: 'gai', name: 'גיא', english: 'Gai', lat: 32.78, lon: 35.54 },
+    { id: 'ganim', name: 'גנים', english: 'Ganim', lat: 32.7751, lon: 35.5462 },
+    { id: 'gilan-kinneret-rimonim', name: 'גלי כינרת רימונים', english: 'Gali Kinneret Rimonim', lat: 32.7859, lon: 35.544 },
+    { id: 'golan', name: 'גולן', english: 'Golan', lat: 32.8485, lon: 35.6496 },
+    { id: 'gofra', name: 'גופרה', english: 'Gofra', lat: 32.8028, lon: 35.6433 },
+    { id: 'gino', name: 'ג\'ינו', english: 'Gino', lat: 32.88, lon: 35.57 },
+    { id: 'halukim', name: 'חלוקים', english: 'Halukim', lat: 32.8552, lon: 35.641 },
+    { id: 'hanion-haon', name: 'חניון האון', english: 'Haon Parking', lat: 32.7266, lon: 35.6225 },
+    { id: 'hanion-yarden-kinneret', name: 'חניון ירדן כינרת', english: 'Jordan Kinneret Parking', lat: 32.7117, lon: 35.576 },
+    { id: 'hamei-tiberias', name: 'חמי טבריה', english: 'Hamei Tiberias', lat: 32.7681, lon: 35.5498 },
+    { id: 'hadekel', name: 'הדקל', english: 'Hadekel', lat: 32.767, lon: 35.545 },
+    { id: 'the-diamond', name: 'הדאימונד', english: 'The Diamond', lat: 32.8346, lon: 35.642 },
+    { id: 'hatekhelet', name: 'התכלת', english: 'HaTekhelet', lat: 32.7939, lon: 35.5422 },
+    { id: 'deganya', name: 'דגניה', english: 'Deganya', lat: 32.7087, lon: 35.5789 },
+    { id: 'duga', name: 'דוגה', english: 'Duga', lat: 32.85966, lon: 35.64741 },
+    { id: 'dugit', name: 'דוגית', english: 'Dugit', lat: 32.8499, lon: 35.6489 },
+    { id: 'haon-resort', name: 'נופש האון', english: 'Haon Resort', lat: 32.7243, lon: 35.6188 },
+    { id: 'ein-gev-resort', name: 'נופש עין-גב', english: 'Ein Gev Resort', lat: 32.7681, lon: 35.6393 },
+    { id: 'nof-ginosar', name: 'נוף גינוסר', english: 'Nof Ginosar', lat: 32.85, lon: 35.52 },
+    { id: 'lebanon', name: 'לבנון', english: 'Lebanon', lat: 32.82, lon: 35.65 },
+    { id: 'kinneret', name: 'כינרת', english: 'Kinneret', lat: 32.7846, lon: 35.5416 },
+    { id: 'kursi', name: 'כורסי', english: 'Kursi', lat: 32.8247, lon: 35.6483 },
+    { id: 'maagan-eden', name: 'מעגן עדן', english: 'Maagan Eden', lat: 32.7081, lon: 35.5996 },
+    { id: 'shizaf-rotem', name: 'שיזף-רותם', english: 'Shizaf-Rotem', lat: 32.8002, lon: 35.6411 },
+    { id: 'shikmim', name: 'שקמים', english: 'Shikmim', lat: 32.8611, lon: 35.5586 },
+    { id: 'shket-leonardo', name: 'שקט לאונרדו', english: 'Shket Leonardo', lat: 32.7984, lon: 35.5395 },
+    { id: 'shitaim', name: 'שיטים', english: 'Shitaim', lat: 32.76, lon: 35.64 },
+    { id: 'sironit', name: 'סירונית', english: 'Sironit', lat: 32.784, lon: 35.5403 },
+    { id: 'susita', name: 'סוסיתא', english: 'Susita', lat: 32.7905, lon: 35.6402 },
+    { id: 'sfirit', name: 'ספירית', english: 'Sfirit', lat: 32.8859, lon: 35.583 },
+    { id: 'tzaalon', name: 'צאלון', english: 'Tzaalon', lat: 32.84, lon: 35.65 },
+    { id: 'tzemach', name: 'צמח', english: 'Tzemach', lat: 32.7057, lon: 35.5853 },
+    { id: 'tzinbari', name: 'צינברי', english: 'Tzinbari', lat: 32.7365, lon: 35.5696 },
+    { id: 'the-separated-beach', name: 'החוף הנפרד', english: 'The Separated Beach', lat: 32.7662, lon: 35.5541 },
+    { id: 'the-promenade', name: 'הטיילת', english: 'The Promenade', lat: 32.787, lon: 35.539 },
+    { id: 'raket', name: 'רקת (בורה בורה)', english: 'Raket (Bora Bora)', lat: 32.8, lon: 35.53 },
+    { id: 'restel', name: 'רסטל', english: 'Restel', lat: 32.8242, lon: 35.5166 }
 ];
-
 
 export default function UploadForm({ onUploadSuccess }) {
     const router = useRouter();
@@ -150,6 +146,15 @@ export default function UploadForm({ onUploadSuccess }) {
     const [status, setStatus] = useState("");
     const [fileInputKey, setFileInputKey] = useState(() => Date.now());
     const [currentTheme, setCurrentTheme] = useState("light");
+    const [isDropdownSelected, setIsDropdownSelected] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
+    const [autoLocationTriggered, setAutoLocationTriggered] = useState(false);
+
+    const [lat, setLat] = useState(null);
+    const [lon, setLon] = useState(null);
+
+    const [filteredBeaches, setFilteredBeaches] = useState([]);
+    const [isDropdownVisible, setIsDropdownVisible] = useState(false);
 
     useEffect(() => {
         if (typeof document !== "undefined") {
@@ -162,7 +167,57 @@ export default function UploadForm({ onUploadSuccess }) {
         }
     }, []);
 
+    const handleManualLocationChange = async (text) => {
+        setManualLocation(text);
 
+        if (!text) {
+            setLat(null);
+            setLon(null);
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `https://us1.locationiq.com/v1/search.php?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(text)}&format=json`
+            );
+            const data = await response.json();
+
+            if (data && data[0]) {
+                setLat(parseFloat(data[0].lat));
+                setLon(parseFloat(data[0].lon));
+                setIsMapVisible(true);
+            } else {
+                setLat(null);
+                setLon(null);
+                setIsMapVisible(false);
+            }
+        } catch (err) {
+            console.error("Forward geocoding error:", err);
+            setLat(null);
+            setLon(null);
+            setIsMapVisible(false);
+        }
+    };
+
+    const handleInputChange = (e) => {
+        const value = e.target.value;
+        setManualLocation(value);
+
+        if (value.length === 0) {
+            setFilteredBeaches([]);
+            setIsDropdownVisible(false);
+            return;
+        }
+
+        const filtered = beaches.filter(
+            (b) =>
+                b.hebrew.startsWith(value) ||
+                b.english.toLowerCase().startsWith(value.toLowerCase())
+        );
+
+        setFilteredBeaches(filtered);
+        setIsDropdownVisible(filtered.length > 0);
+    };
     const handleFileChange = async (f) => {
         if (f) {
             const options = {
@@ -237,13 +292,18 @@ export default function UploadForm({ onUploadSuccess }) {
 
     const showOnMap = () => {
         saveFormState();
-        if (coordinates && coordinates.includes("Lat:") && coordinates.includes("Lon:")) {
+
+        // Check if numeric latitude and longitude are valid
+        if (lat != null && lon != null) {
             setIsMapVisible(true);
+            setSearchStatusMessage("Showing location on map!");
         } else {
             setSearchStatusMessage("Please find or select a location with valid coordinates before showing on the map.");
         }
-        console.log("Coordinates:", coordinates, getCoords(coordinates));
+
+        console.log("Coordinates:", { lat, lon });
     };
+
 
     const setCurrentDateTime = () => {
         const { dateInput, time } = getCurrentDateTime();
@@ -352,55 +412,115 @@ export default function UploadForm({ onUploadSuccess }) {
         }, "image/jpeg");
     };
 
-
     const handleAutoLocation = () => {
+        if (autoLocationTriggered) return; // prevent double
+        setAutoLocationTriggered(true);
+
         setApiErrorMessage("");
         setSearchStatusMessage("Getting your current location...");
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(async (pos) => {
+
+        // Reset dropdown selection
+        setLocation("");  // ✅ reset dropdown
+        setIsDropdownSelected(false); // optional, if you use this to disable manual input
+
+        if (!navigator.geolocation) {
+            setSearchStatusMessage("Geolocation is not supported by your browser");
+            setCoordinates("");
+            setLat(null);
+            setLon(null);
+            setManualLocation("");
+            setIsMapVisible(false);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
                 const { latitude, longitude } = pos.coords;
+
+                setLat(latitude);
+                setLon(longitude);
                 setCoordinates(`Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`);
 
                 try {
-                    const response = await fetch(`https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_API_KEY}&lat=${latitude}&lon=${longitude}&format=json`);
-                    const data = await response.json();
+                    const result = await geocodeAddress(latitude, longitude);
 
-                    if (data.address) {
-                        const address = data.address;
-                        let street = address.road || '';
-                        let city = address.city || address.town || address.village || '';
-                        const postcode = address.postcode || '';
-                        const addressParts = [];
+                    if (result) {
+                        const { road, city, postcode, country } = result;
+                        const nameFallbacks = [road, city, postcode, country].filter(Boolean);
+                        const locationName = nameFallbacks.join(", ") || result.display_name || "";
 
-                        if (street) addressParts.push(street);
-                        if (city) addressParts.push(city);
-                        if (postcode) addressParts.push(postcode);
-
-                        const newLocationName = addressParts.join(', ').trim();
-                        setManualLocation(newLocationName || "Unknown Location");
-                        setSearchStatusMessage("Location found!");
-
-                        // THIS IS THE LINE THAT MAKES THE MAP APPEAR
-                        setIsMapVisible(true);
+                        // Only update message if coordinates were not previously set
+                        if (!lat && !lon) {
+                            setSearchStatusMessage(locationName ? "Location found!" : "Location name not found");
+                        }
                     } else {
-                        setManualLocation("Unknown Location");
-                        setSearchStatusMessage("Location name not found.");
+                        setSearchStatusMessage("Location name not found");
                     }
                 } catch (err) {
                     console.error("Reverse geocoding error:", err);
-                    setManualLocation("Error getting location name");
                     setSearchStatusMessage("Error getting location name.");
                 }
-            }, (error) => {
+            },
+            (error) => {
                 console.error("Geolocation error:", error);
                 setSearchStatusMessage("Could not get your location. Please ensure location services are enabled.");
-                setCoordinates("Error getting real-time coordinates");
-            });
-        } else {
-            setSearchStatusMessage("Geolocation is not supported by your browser");
+                setCoordinates("");
+                setLat(null);
+                setLon(null);
+                setManualLocation("");
+                setIsMapVisible(false);
+            }
+        );
+
+    };
+
+
+
+    // Function to handle the search for a manual location using Nominatim
+    const handleSearchLocation = async () => {
+        if (!manualLocation) {
+            setApiErrorMessage("Please enter a location to search.");
+            setSearchStatusMessage("");
+            return;
+        }
+        setApiErrorMessage("");
+        setSearchStatusMessage("Searching for location...");
+        setIsSearching(true);
+
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(manualLocation)}&format=json&limit=5&countrycodes=il`,
+                {
+                    headers: { "User-Agent": "EcoSnap" }, // required by Nominatim
+                }
+            );
+
+            const data = await response.json();
+
+            if (data && data.length > 0) {
+                const { lat, lon, display_name } = data[0];
+                setCoordinates(`Lat: ${parseFloat(lat).toFixed(5)}, Lon: ${parseFloat(lon).toFixed(5)}`);
+                setLocation(""); // Clear dropdown selection if you have one
+                setManualLocation(display_name);
+                setIsDropdownSelected(false);
+                setSearchStatusMessage("Location found! You can now show it on the map.");
+                setIsMapVisible(true);
+            } else {
+                setSearchStatusMessage("Location not found. Please try a different query.");
+                setCoordinates("");
+                setIsMapVisible(false);
+            }
+        } catch (error) {
+            setSearchStatusMessage("Failed to search for location. Please check your network connection.");
+            setApiErrorMessage(`Search Error: ${error.message}`);
+            console.error("Nominatim search error:", error);
             setCoordinates("");
+            setIsMapVisible(false);
+        } finally {
+            setIsSearching(false);
         }
     };
+
 
     const handleUpload = async () => {
         let fileToUpload = file;
@@ -599,55 +719,105 @@ export default function UploadForm({ onUploadSuccess }) {
             {/* Location selection, date/time, urgency, description */}
             <div className="flex flex-col gap-3 mt-4">
                 {/* Location & manual input */}
-                <select
-                    value={location}
-                    onChange={(e) => {
-                        const selectedValue = e.target.value;
-                        setLocation(selectedValue);
-                        const selectedBeach = galileeBeaches.find(beach => beach.id === selectedValue);
-                        if (selectedBeach) {
-                            setCoordinates(`Lat: ${selectedBeach.lat}, Lon: ${selectedBeach.lon}`);
-                            setManualLocation(selectedBeach.name);
-                            setSearchStatusMessage(`Coordinates for ${selectedBeach.name} updated.`);
-                        } else {
-                            setCoordinates("");
-                            setManualLocation("");
-                            setSearchStatusMessage("");
-                        }
-                    }}
-                    className={`w-full border rounded-lg p-2 focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-gray-800 text-emerald-300' : 'bg-white/70 text-emerald-700'}`}
-                >
-                    <option value="">Select a Beach</option>
-                    {galileeBeaches.map((beach) => (
-                        <option
-                            key={beach.id}
-                            value={beach.id}
-                            style={{
-                                backgroundColor: currentTheme === 'dark' ? '#1f2937' : '#ffffff',
-                                color: currentTheme === 'dark' ? '#6ee7b7' : '#047857' // Updated color for light mode
-                            }}
-                        >
-                            {beach.name}
-                        </option>
-                    ))}
-                </select>
+                <div className="flex gap-2 items-center">
+                    <select
+                        value={location}
+                        onChange={(e) => {
+                            const selectedValue = e.target.value;
+                            setLocation(selectedValue);
 
+                            const selectedBeach = galileeBeaches.find(beach => beach.id === selectedValue);
+                            if (selectedBeach) {
+                                setLat(selectedBeach.lat);
+                                setLon(selectedBeach.lon);
+                                setCoordinates(`Lat: ${selectedBeach.lat.toFixed(5)}, Lon: ${selectedBeach.lon.toFixed(5)}`);
+                                setManualLocation("");
+                                setIsDropdownSelected(true);
+                            } else {
+                                setLat(null);
+                                setLon(null);
+                                setCoordinates("");
+                                setManualLocation("");
+                                setIsDropdownSelected(false);
+                                setSearchStatusMessage(""); // reset message
+                            }
+                        }}
+                        className={`w-full border rounded-lg p-2 focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-gray-800 text-emerald-300' : 'bg-white/70 text-emerald-700'}`}
+                    >
+                        <option value="">Select a Beach</option>
+                        {galileeBeaches.map((beach) => (
+                            <option key={beach.id} value={beach.id}>
+                                {beach.name} ({beach.english})
+                            </option>
+                        ))}
+                    </select>
+
+                    {/* Cancel / Clear Selection button */}
+                    {isDropdownSelected && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setLocation("");              // reset dropdown
+                                setIsDropdownSelected(false); // enable manual textarea
+                                setManualLocation("");        // clear manual field
+                                setCoordinates("");           // clear coordinates
+                                setSearchStatusMessage("");
+                            }}
+                            className="px-3 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 text-sm"
+                        >
+                            Clear
+                        </button>
+                    )}
+                </div>
+
+                {/* Manual input + search */}
                 <div className="flex gap-2 items-center">
                     <textarea
                         placeholder="Or Enter Location Manually (Address, City, Zip Code)"
-                        className={`flex-1 border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-emerald-300 placeholder-gray-400' : 'bg-white/70 text-emerald-700 placeholder-gray-500'}`}
+                        className={`flex-1 border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'bg-black/30 text-emerald-300 placeholder-gray-400' : 'bg-white/70 text-emerald-700 placeholder-gray-500'} ${isDropdownSelected ? 'cursor-not-allowed' : ''}`}
                         value={manualLocation}
-                        onChange={(e) => { setManualLocation(e.target.value); setLocation(""); setCoordinates(""); setApiErrorMessage(""); }}
+                        onChange={(e) => {
+                            setManualLocation(e.target.value);
+                            setLocation("");            // clear dropdown when typing manually
+                            setCoordinates("");         // optional: reset coordinates
+                            setApiErrorMessage("");
+                            setSearchStatusMessage("");
+                            setIsDropdownSelected(false); // enable manual input
+                        }}
+                        disabled={isDropdownSelected}
                         rows="2"
                     />
-                    <button onClick={handleAutoLocation} className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">Auto</button>
+
+                    <button
+                        type="button"
+                        onClick={handleSearchLocation} // forward geocode manualLocation
+                        disabled={isDropdownSelected || !manualLocation}
+                        className={`px-3 py-2 text-white rounded-lg hover:bg-blue-600 text-sm transition-colors duration-200 ${isDropdownSelected || !manualLocation ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500'}`}
+                    >
+                        Search
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={handleAutoLocation} // auto geolocation
+                        className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+                    >
+                        Auto
+                    </button>
                 </div>
+
+                {/* Status message */}
+                {searchStatusMessage && (
+                    <p className={`mt-2 text-sm text-center ${searchStatusMessage.includes("Error") || searchStatusMessage.includes("not found") ? "text-red-500" : "text-green-500"}`}>
+                        {searchStatusMessage}
+                    </p>
+                )}
 
                 <div className={`flex-1 p-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>
-                    {coordinates || "Coordinates:"}
+                    {lat != null && lon != null ? `Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)}` : "Coordinates:"}
                 </div>
 
-                {searchStatusMessage && <p className={`text-sm text-center font-semibold ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-700'}`}>{searchStatusMessage}</p>}
+
                 {apiErrorMessage && <p className="text-red-500 text-sm text-center">{apiErrorMessage}</p>}
 
                 <button
@@ -669,9 +839,9 @@ export default function UploadForm({ onUploadSuccess }) {
                         </button>
 
                         <PickedLocationMap
-                            lat={getCoords(coordinates).lat}
-                            lon={getCoords(coordinates).lon}
-                            locationName={location}
+                            lat={lat}
+                            lon={lon}
+                            locationName={manualLocation}
                         />
                     </div>
                 )}
@@ -736,6 +906,6 @@ export default function UploadForm({ onUploadSuccess }) {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }

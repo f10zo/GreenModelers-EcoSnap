@@ -506,24 +506,6 @@ export default function UploadForm({ onUploadSuccess }) {
                 color: currentTheme === "dark" ? "#fff" : "#000",
             }}
         >
-            {/* Map Modal */}
-            {isMapVisible && (
-                <Suspense fallback={<div>Loading map...</div>}>
-                    <PickedLocationMap
-                        lat={getCoords(coordinates).lat}
-                        lon={getCoords(coordinates).lon}
-                        locationName={manualLocation || galileeBeaches.find(b => b.id === location)?.name || "Selected Location"}
-                    />
-                    <button
-                        onClick={() => setIsMapVisible(false)}
-                        className="absolute top-4 right-4 z-[1000] p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-200"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </Suspense>
-            )}
 
             {/* Header */}
             <h2 className={`text-3xl font-bold mb-6 text-center ${currentTheme === "dark" ? "text-emerald-300" : "text-emerald-700"}`}>
@@ -675,7 +657,7 @@ export default function UploadForm({ onUploadSuccess }) {
                     Show on Map 🗺️
                 </button>
 
-                {/* Inline Map - shows below the button */}
+                {/* Inline Map - appears below button when visible */}
                 {isMapVisible && (
                     <div className="relative w-full my-4 h-[300px] rounded-2xl overflow-hidden shadow-lg">
                         {/* Close button */}
@@ -693,7 +675,6 @@ export default function UploadForm({ onUploadSuccess }) {
                         />
                     </div>
                 )}
-
 
                 {/* Date & Time */}
                 <div className="flex gap-2 items-center text-sm">

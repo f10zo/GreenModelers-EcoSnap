@@ -3,7 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getStorage } from "firebase/storage";
 import { getFirestore } from "firebase/firestore";
 
-// Your Firebase config
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDCPMOz4NlMB_QkQXGEHWkOllTIBYSy1tU",
   authDomain: "ecosnap-c15f6.firebaseapp.com",

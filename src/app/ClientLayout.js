@@ -7,14 +7,12 @@ import "./globals.css";
 
 export default function ClientLayout({ children }) {
     const [currentTheme, setCurrentTheme] = useState("light");
-
     useEffect(() => {
         if (typeof window !== "undefined") {
             const savedTheme = localStorage.getItem("theme");
             const htmlClass = document.documentElement.className;
             setCurrentTheme(savedTheme || htmlClass || "light");
         }
-
         const observer = new MutationObserver(() => {
             setCurrentTheme(document.documentElement.className);
         });

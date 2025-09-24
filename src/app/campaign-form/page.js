@@ -170,7 +170,6 @@ export default function PublishCampaignForm() {
     }
   };
 
-
   const [currentTheme, setCurrentTheme] = useState('light');
   const [status, setStatus] = useState("");
 
@@ -191,7 +190,6 @@ export default function PublishCampaignForm() {
       observer.disconnect();
     };
   }, []);
-
 
   const [formData, setFormData] = useState({
     campaignName: "",
@@ -260,7 +258,6 @@ export default function PublishCampaignForm() {
         return;
       }
     }
-
     try {
       await addDoc(collection(db, "campaigns"), {
         ...formData,
@@ -307,8 +304,6 @@ export default function PublishCampaignForm() {
       setIsMapVisible(false);
     }
   };
-
-
 
   const isDarkMode = currentTheme === 'dark';
 
@@ -508,7 +503,6 @@ export default function PublishCampaignForm() {
           Show on Map 🗺️
         </button>
 
-
         {isMapVisible && lat != null && lon != null && (
           <div className="relative mt-2 w-full h-64 rounded-lg overflow-hidden shadow-lg">
             {/* Close button */}
@@ -529,7 +523,6 @@ export default function PublishCampaignForm() {
             </MapContainer>
           </div>
         )}
-
 
         {/* Drag & Drop Image */}
         <div
@@ -574,7 +567,6 @@ export default function PublishCampaignForm() {
           onChange={handleChange}
           className={`w-full p-2 rounded-lg border transition-colors duration-500 ${isDarkMode ? 'border-emerald-500 bg-slate-700 text-gray-200 placeholder-emerald-300' : 'border-emerald-300 bg-white/70 text-gray-800 placeholder-emerald-700'}`}
         />
-
         <button
           type="submit"
           className={`w-full p-2 rounded-lg font-semibold transition-colors duration-500 ${isDarkMode ? 'bg-emerald-500 text-white hover:bg-emerald-400' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}

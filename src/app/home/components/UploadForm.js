@@ -48,7 +48,6 @@ const dataURLtoBlob = (dataurl) => {
 // Helper function for reverse geocoding using OpenStreetMap Nominatim
 const geocodeAddress = async (latitude, longitude) => {
     if (!latitude || !longitude) return null;
-
     try {
         const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
@@ -175,7 +174,6 @@ export default function UploadForm({ onUploadSuccess }) {
             setLon(null);
             return;
         }
-
         try {
             const response = await fetch(
                 `https://us1.locationiq.com/v1/search.php?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(text)}&format=json`
@@ -225,7 +223,6 @@ export default function UploadForm({ onUploadSuccess }) {
                 maxWidthOrHeight: 1920,
                 useWebWorker: true,
             };
-
             try {
                 const compressedFile = await imageCompression(f, options);
                 setFile(compressedFile);
@@ -362,15 +359,12 @@ export default function UploadForm({ onUploadSuccess }) {
         };
     }, []);
 
-
     const startCamera = async () => {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             alert("Your browser does not support camera access.");
             return;
         }
-
         setIsCameraActive(true);
-
         try {
             await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -436,11 +430,9 @@ export default function UploadForm({ onUploadSuccess }) {
         navigator.geolocation.getCurrentPosition(
             async (pos) => {
                 const { latitude, longitude } = pos.coords;
-
                 setLat(latitude);
                 setLon(longitude);
                 setCoordinates(`Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`);
-
                 try {
                     const result = await geocodeAddress(latitude, longitude);
 
@@ -474,8 +466,6 @@ export default function UploadForm({ onUploadSuccess }) {
 
     };
 
-
-
     // Function to handle the search for a manual location using Nominatim
     const handleSearchLocation = async () => {
         if (!manualLocation) {
@@ -486,7 +476,6 @@ export default function UploadForm({ onUploadSuccess }) {
         setApiErrorMessage("");
         setSearchStatusMessage("Searching for location...");
         setIsSearching(true);
-
         try {
             const response = await fetch(
                 `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(manualLocation)}&format=json&limit=5&countrycodes=il`,
@@ -574,7 +563,6 @@ export default function UploadForm({ onUploadSuccess }) {
                     });
 
                     if (onUploadSuccess) onUploadSuccess();
-
                     setFile(null);
                     setPreview(null);
                     setDescription("");
@@ -587,7 +575,6 @@ export default function UploadForm({ onUploadSuccess }) {
                     setCoordinates("");
                     localStorage.removeItem('uploadFormState');
                     setSuccessMessage("Upload successful! Your report is now in the gallery.");
-
                     setTimeout(() => {
                         setSuccessMessage("");
                     }, 5000);
@@ -626,7 +613,6 @@ export default function UploadForm({ onUploadSuccess }) {
                 color: currentTheme === "dark" ? "#fff" : "#000",
             }}
         >
-
             {/* Header */}
             <h2 className={`text-3xl font-bold mb-6 text-center ${currentTheme === "dark" ? "text-emerald-300" : "text-emerald-700"}`}>
                 <strong>Upload Report</strong>
@@ -693,7 +679,6 @@ export default function UploadForm({ onUploadSuccess }) {
                         </div>
                     </>
                 )}
-
                 <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
                 {preview && (
                     <div className="relative border rounded-lg overflow-hidden">
@@ -725,7 +710,6 @@ export default function UploadForm({ onUploadSuccess }) {
                         onChange={(e) => {
                             const selectedValue = e.target.value;
                             setLocation(selectedValue);
-
                             const selectedBeach = galileeBeaches.find(beach => beach.id === selectedValue);
                             if (selectedBeach) {
                                 setLat(selectedBeach.lat);
@@ -787,7 +771,6 @@ export default function UploadForm({ onUploadSuccess }) {
                         disabled={isDropdownSelected}
                         rows="2"
                     />
-
                     <button
                         type="button"
                         onClick={handleSearchLocation} // forward geocode manualLocation
@@ -812,7 +795,6 @@ export default function UploadForm({ onUploadSuccess }) {
                         {searchStatusMessage}
                     </p>
                 )}
-
                 <div className={`flex-1 p-2 transition-colors duration-500 ${currentTheme === 'dark' ? 'text-emerald-300' : 'text-emerald-700'}`}>
                     {lat != null && lon != null ? `Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)}` : "Coordinates:"}
                 </div>
@@ -899,7 +881,6 @@ export default function UploadForm({ onUploadSuccess }) {
                 <button onClick={handleUpload} className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 font-semibold transition-colors duration-200">
                     Submit Report
                 </button>
-
                 {successMessage && (
                     <div className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-100" role="alert">
                         <span className="font-medium">Success!</span> {successMessage}

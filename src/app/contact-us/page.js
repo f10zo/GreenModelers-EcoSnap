@@ -32,7 +32,6 @@ export default function ContactUsPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setStatus("Sending...");
-
         try {
             await addDoc(collection(db, "contactRequests"), {
                 ...formData,

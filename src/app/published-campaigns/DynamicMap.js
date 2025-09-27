@@ -1,4 +1,3 @@
-// src/app/published-campaigns/DynamicMap.js
 'use client';
 
 import L from 'leaflet';
@@ -6,19 +5,17 @@ import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { useEffect, useState } from 'react';
 
+// 🛑 REMOVED: The global icon fix code was removed from here.
+// It is moved inside the useEffect hook in the DynamicMap component below.
 
-// Fix default marker icon
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
 
 // A utility to get the theme on the client-side
 const useClientTheme = () => {
     const [theme, setTheme] = useState('light');
     useEffect(() => {
+        // This check is a safe guard, but the 'use client' and useEffect should handle it.
+        if (typeof document === 'undefined') return;
+
         const observer = new MutationObserver(() => {
             setTheme(document.documentElement.className.includes('dark') ? 'dark' : 'light');
         });
@@ -57,6 +54,20 @@ export default function DynamicMap({ campaigns = [] }) {
     const theme = useClientTheme();
     const isDarkMode = theme === 'dark';
     const mapCenter = calculateCenter(campaigns);
+
+    // 🚀 THE CRITICAL FIX: Leaflet icon setup runs only after the component mounts
+    // and the window object is available in the browser.
+    useEffect(() => {
+        if (typeof window !== 'undefined' && L) {
+            delete L.Icon.Default.prototype._getIconUrl;
+            L.Icon.Default.mergeOptions({
+                iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+                iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            });
+        }
+    }, []); // Empty dependency array ensures it runs only once on mount.
+
 
     return (
         <div className="w-full h-[70vh] rounded-2xl overflow-hidden">

@@ -289,8 +289,6 @@ export default function UploadForm({ onUploadSuccess }) {
 
     const showOnMap = () => {
         saveFormState();
-
-        // Check if numeric latitude and longitude are valid
         if (lat != null && lon != null) {
             setIsMapVisible(true);
             setSearchStatusMessage("Showing location on map!");

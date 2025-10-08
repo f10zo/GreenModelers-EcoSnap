@@ -71,7 +71,7 @@ export default function PublishCampaignForm() {
     ];
 
     const GEOAPIFY_API_KEY = "798aff4296834f94ae8593ec7f2146b5";
-    
+
     useEffect(() => {
         const observer = new MutationObserver(() => {
             const newTheme = document.documentElement.className;
@@ -315,6 +315,12 @@ export default function PublishCampaignForm() {
             >
                 📢 Publish a Volunteer Campaign
             </h2>
+
+            {/* 🛑 UPDATED INTRODUCTION TEXT (Larger Font, Less Text) 🛑 */}
+            <p className={`text-center mb-6 text-lg font-medium transition-colors duration-500 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                Organize a cleanup! Use this form to announce a **volunteer event** focused on a location that has been previously reported as polluted.
+            </p>
+            {/* 🛑 END UPDATED INTRODUCTION TEXT 🛑 */}
 
             <form onSubmit={handleSubmit} className="space-y-3">
                 {/* Campaign & Organizer */}

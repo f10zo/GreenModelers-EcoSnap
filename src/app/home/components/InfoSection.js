@@ -47,16 +47,19 @@ export default function InfoSection() {
         </h3>
 
         <p
-          className={`text-sm leading-relaxed text-center transition-colors duration-500 ${currentTheme === "dark" ? "text-gray-300" : "text-gray-700"
+          className={`text-lg leading-relaxed text-center transition-colors duration-500 ${currentTheme === "dark" ? "text-gray-300" : "text-gray-700"
             }`}
         >
           <strong
-            className={`text-base font-bold transition-colors duration-500 ${currentTheme === "dark" ? "text-emerald-400" : "text-emerald-600"
+            className={`text-xl font-bold transition-colors duration-500 ${currentTheme === "dark" ? "text-emerald-400" : "text-emerald-600"
               }`}
           >
-            Every action helps!
-          </strong>{" "}
-          Let&apos;s protect our vital natural resources together.
+            Every action helps! Your community platform for the Kinneret.
+          </strong>
+
+          {/* 🛑 ADDED LINE BREAK AND NEWLINE TEXT HERE 🛑 */}
+          <br />
+          Report pollution, organize cleanup campaigns, and mobilize volunteers to protect the Sea of Galilee.
         </p>
 
         {/* ✅ Section for Report and Share Info */}

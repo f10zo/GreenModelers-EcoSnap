@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import dynamic from 'next/dynamic';
+import Image from 'next/image'; // 🛑 Import Next.js Image component
 import { db } from '../../firebase';
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 
@@ -26,7 +27,8 @@ export default function PublishedCampaignsPage() {
                     return {
                         id: doc.id,
                         ...campaignData,
-                        volunteersNeeded: parseInt(campaignData.volunteersNeeded) || 0
+                        volunteersNeeded: parseInt(campaignData.volunteersNeeded) || 0,
+                        // The imageUrl is now available here
                     };
                 });
                 setCampaigns(data);
@@ -76,6 +78,20 @@ export default function PublishedCampaignsPage() {
                                 key={c.id}
                                 className={`rounded-2xl p-4 shadow-md transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${isDarkMode ? 'bg-slate-900 text-emerald-400' : 'bg-emerald-100/60 text-emerald-800'}`}
                             >
+                                {/* 🛑 NEW: Image Display 🛑 */}
+                                {c.imageUrl && (
+                                    <div className="mb-3 w-full h-40 relative overflow-hidden rounded-xl shadow-lg">
+                                        <Image
+                                            src={c.imageUrl}
+                                            alt={`Photo of ${c.campaignName} campaign location`}
+                                            layout="fill"
+                                            objectFit="cover" // Ensures the image covers the area without distortion
+                                            className="transition-transform duration-500 hover:scale-110" // Optional hover effect
+                                        />
+                                    </div>
+                                )}
+                                {/* 🛑 END NEW: Image Display 🛑 */}
+
                                 <h3 className="text-xl font-bold mb-2">
                                     {c.campaignName}
                                 </h3>
@@ -113,7 +129,7 @@ export default function PublishedCampaignsPage() {
 
                         {/* Background for the paragraph */}
                         <div className={`backdrop-blur-md p-4 rounded-3xl shadow-xl transition-colors duration-500 text-center ${isDarkMode ? 'bg-slate-800/80' : 'bg-white/30'}`}>
-                            <p className={`text-sm font-semibold ${isDarkMode ? 'text--emerald-500' : 'text--emerald-800'}`}>
+                            <p className={`text-sm font-semibold ${isDarkMode ? 'text-emerald-500' : 'text-emerald-800'}`}>
                                 Click on a pin on the map to view the campaign&apos;s details.
                             </p>
                         </div>

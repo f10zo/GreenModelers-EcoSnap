@@ -298,7 +298,7 @@ export default function PublishCampaignForm() {
         }
     };
 
-    const isDarkMode = currentTheme.includes('dark'); // Check if the class string contains 'dark'
+    const isDarkMode = currentTheme.includes('dark'); 
 
     return (
         <div
@@ -316,7 +316,6 @@ export default function PublishCampaignForm() {
                 📢 Publish a Volunteer Campaign
             </h2>
 
-            {/* 🛑 UPDATED INTRODUCTION TEXT (Larger Font, Less Text) 🛑 */}
             <p className={`text-center mb-6 text-lg font-medium transition-colors duration-500 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
                 Organize a cleanup! Use this form to announce a **volunteer event** focused on a location that has been previously reported as polluted.
             </p>

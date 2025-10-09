@@ -32,8 +32,8 @@ export default function Navbar() {
     { name: "Contact", href: "/contact-us", tooltip: "Reach out to our team", icon: <FiMail size={18} /> },
   ];
 
-  const neonGlowColor = "rgba(4, 120, 87, 0.7)"; // Emerald-700
-  const darkModeNeonColor = "rgba(59,130,246,0.7)"; // Blue
+  const neonGlowColor = "rgba(4, 120, 87, 0.7)";
+  const darkModeNeonColor = "rgba(59,130,246,0.7)";
 
   const buttonStyle = {
     backdropFilter: "blur(8px)",
@@ -42,9 +42,15 @@ export default function Navbar() {
     transition: "background-color 0.3s ease-in-out",
   };
 
+  const getGlowStyle = (linkName) => ({
+    boxShadow: activeButton === linkName
+      ? `0 0 20px 4px ${currentTheme.includes('dark') ? darkModeNeonColor : neonGlowColor}`
+      : '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+  });
+
   return (
     <header className="bg-transparent text-white p-2 relative z-20">
-      <nav className="flex items-center justify-between">
+      <nav className="flex items-center justify-between flex-wrap">
         {/* Left: Logo + links */}
         <div className="flex items-center space-x-6">
           {/* Logo */}
@@ -59,7 +65,7 @@ export default function Navbar() {
           </div>
 
           {/* Desktop links */}
-          <div className="hidden lg:flex items-center space-x-4">
+          <div className="hidden [@media(min-width:1300px)]:flex items-center space-x-4">
             {leftLinks.map((link) => (
               <div key={link.name} className="relative group">
                 <Link
@@ -69,10 +75,7 @@ export default function Navbar() {
                   onMouseLeave={() => setActiveButton(null)}
                   onMouseDown={() => setActiveButton(link.name)}
                   onMouseUp={() => setActiveButton(null)}
-                  style={{
-                    ...buttonStyle,
-                    boxShadow: activeButton === link.name ? `0 0 20px 4px ${currentTheme.includes('dark') ? darkModeNeonColor : neonGlowColor}` : '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
-                  }}
+                  style={{ ...buttonStyle, ...getGlowStyle(link.name) }}
                 >
                   {link.icon}
                   {link.name}
@@ -87,8 +90,9 @@ export default function Navbar() {
 
         {/* Right: About + Contact + ThemeToggle + Hamburger */}
         <div className="flex items-center space-x-4">
+          {/* Desktop right links */}
           {rightLinks.map((link) => (
-            <div key={link.name} className="hidden lg:block relative group">
+            <div key={link.name} className="hidden [@media(min-width:1300px)]:block relative group">
               <Link
                 href={link.href}
                 className="px-6 py-3 rounded-lg text-base font-bold shadow-md flex items-center gap-2"
@@ -96,50 +100,70 @@ export default function Navbar() {
                 onMouseLeave={() => setActiveButton(null)}
                 onMouseDown={() => setActiveButton(link.name)}
                 onMouseUp={() => setActiveButton(null)}
-                style={{
-                  ...buttonStyle,
-                  boxShadow: activeButton === link.name ? `0 0 20px 4px ${currentTheme.includes('dark') ? darkModeNeonColor : neonGlowColor}` : '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
-                }}
+                style={{ ...buttonStyle, ...getGlowStyle(link.name) }}
               >
                 {link.icon}
                 {link.name}
               </Link>
               <div className="absolute top-full left-1/2 transform -translate-x-1/2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 bg-gray-700 text-white text-xs rounded py-1 px-2 pointer-events-none whitespace-nowrap">
-                    {link.tooltip}
-                  </div>
+                {link.tooltip}
               </div>
-            ))}
+            </div>
+          ))}
 
-            <ThemeToggle />
+          <ThemeToggle />
 
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 focus:outline-none focus:ring-2 focus:ring-white"
-              aria-label="Toggle menu"
-            >
-              {isMenuOpen ? <FiX size={28} /> : <FiMenu size={28} />}
-            </button>
-          </div>
-        </nav>
+          {/* Hamburger button */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="[@media(max-width:1299px)]:block hidden p-2 focus:outline-none focus:ring-2"
+            aria-label="Toggle menu"
+            style={{ color: currentTheme.includes('dark') ? 'white' : 'rgb(4,120,87)' }}
+          >
+            {isMenuOpen ? <FiX size={28} /> : <FiMenu size={28} />}
+          </button>
+        </div>
 
         {/* Mobile menu */}
-        {isMenuOpen && (
-          <div className="lg:hidden absolute top-full left-0 right-0 bg-gray-800 bg-opacity-90 p-4 z-50">
-            <div className="flex flex-col space-y-3">
-              {[...leftLinks, ...rightLinks].map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className="px-6 py-3 rounded-lg text-base font-bold shadow-md flex items-center gap-2 justify-center"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {link.icon}
-                  {link.name}
-                </Link>
-              ))}
-            </div>
+        <div
+          className={`[@media(max-width:1299px)]:block hidden absolute top-full left-0 right-0 z-50 overflow-hidden rounded-b-lg shadow-lg transition-all duration-300
+            ${isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
+          `}
+          style={{
+            backgroundColor: currentTheme.includes('dark')
+              ? 'rgba(31,41,55,0.9)'
+              : 'rgba(255,255,255,0.9)',
+            color: currentTheme.includes('dark') ? 'white' : 'rgb(4,120,87)',
+          }}
+        >
+          <div className={`flex flex-col space-y-3 p-4 ${isMenuOpen ? 'opacity-100 transition-opacity duration-500' : 'opacity-0'}`}>
+            {[...leftLinks, ...rightLinks].map((link) => (
+              <Link
+                key={link.name}
+                href={link.href}
+                className="px-6 py-3 rounded-lg text-base font-bold shadow-md flex items-center gap-2 justify-center group"
+                onMouseEnter={() => setActiveButton(link.name)}
+                onMouseLeave={() => setActiveButton(null)}
+                onMouseDown={() => setActiveButton(link.name)}
+                onMouseUp={() => setActiveButton(null)}
+                style={{
+                  backgroundColor: currentTheme.includes('dark')
+                    ? 'rgba(15,23,42,0.5)'
+                    : 'rgba(236, 253, 245, 0.6)',
+                  color: currentTheme.includes('dark') ? 'white' : 'rgb(4,120,87)',
+                  boxShadow: activeButton === link.name
+                    ? `0 0 20px 4px ${currentTheme.includes('dark') ? darkModeNeonColor : neonGlowColor}`
+                    : '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+                }}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {link.icon}
+                {link.name}
+              </Link>
+            ))}
           </div>
-        )}
-      </header>
-    );
+        </div>
+      </nav>
+    </header>
+  );
 }

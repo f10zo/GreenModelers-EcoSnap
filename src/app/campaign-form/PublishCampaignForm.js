@@ -298,7 +298,7 @@ export default function PublishCampaignForm() {
         }
     };
 
-    const isDarkMode = currentTheme.includes('dark'); 
+    const isDarkMode = currentTheme.includes('dark');
 
     return (
         <div
@@ -343,44 +343,63 @@ export default function PublishCampaignForm() {
                     required
                 />
 
-                {/* Date & Time */}
-                <div className="flex gap-2">
-                    <input
-                        type="text"
-                        name="date"
-                        placeholder="DD/MM/YYYY"
-                        value={formData.date}
-                        onChange={handleChange}
-                        onFocus={(e) => e.target.type = 'date'}
-                        onBlur={(e) => { if (!e.target.value) e.target.type = 'text' }}
-                        className={`w-full p-2 rounded-lg border transition-colors duration-500 ${isDarkMode ? 'border-emerald-500 bg-slate-700 text-gray-200 placeholder-emerald-300' : 'border-emerald-300 bg-white/70 text-gray-800 placeholder-emerald-700'}`}
-                        required
-                    />
-                    <input
-                        type="text"
-                        name="time"
-                        placeholder="--:--"
-                        value={formData.time}
-                        onChange={handleChange}
-                        onFocus={(e) => e.target.type = 'time'}
-                        onBlur={(e) => { if (!e.target.value) e.target.type = 'text' }}
-                        className={`w-full p-2 rounded-lg border transition-colors duration-500 ${isDarkMode ? 'border-emerald-500 bg-slate-700 text-gray-200 placeholder-emerald-300' : 'border-emerald-300 bg-white/70 text-gray-800 placeholder-emerald-700'}`}
-                        required
-                    />
-                    <button
-                        type="button"
-                        className={`px-2 py-1 rounded-lg text-sm transition-colors duration-500 ${isDarkMode ? 'bg-emerald-700 text-white hover:bg-emerald-600' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
-                        onClick={() => {
-                            const now = new Date();
-                            setFormData(prev => ({
-                                ...prev,
-                                date: now.toISOString().split('T')[0],
-                                time: now.toTimeString().slice(0, 5)
-                            }));
-                        }}
-                    >
-                        Now
-                    </button>
+                {/* Date and Time Input with Robust Time Format Enforcement */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Date Input */}
+                    <div>
+                        <label htmlFor="date" className="block text-sm font-medium mb-1">
+                            Date (DD/MM/YYYY)
+                        </label>
+                        {/* We keep the dynamic type switching for DATE because it's the only way to use the DD/MM/YYYY placeholder */}
+                        <input
+                            type="text"
+                            id="date"
+                            name="date"
+                            placeholder="DD/MM/YYYY"
+                            value={formData.date}
+                            onChange={handleChange}
+                            onFocus={(e) => e.target.type = 'date'}
+                            onBlur={(e) => { if (!e.target.value) e.target.type = 'text' }}
+                            className={`p-3 border rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full
+                ${isDarkMode ? 'border-emerald-500 bg-slate-700 text-gray-200 placeholder-emerald-300' : 'border-emerald-300 bg-white/70 text-gray-800 placeholder-emerald-700'}`}
+                            required
+                        />
+                    </div>
+
+                    {/* Time Input and 'Now' Button */}
+                    <div className="flex flex-col">
+                        <label htmlFor="time" className="block text-sm font-medium mb-1">
+                            Time (HH:MM)
+                        </label>
+                        <div className="flex gap-2">
+                            <input
+                                type="time"
+                                id="time"
+                                name="time"
+                                placeholder="--:--"
+                                value={formData.time}
+                                onChange={handleChange}
+                                className={`flex-1 p-3 border rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block
+                    ${isDarkMode ? 'border-emerald-500 bg-slate-700 text-gray-200 placeholder-emerald-300' : 'border-emerald-300 bg-white/70 text-gray-800 placeholder-emerald-700'}`}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const now = new Date();
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        date: now.toISOString().split('T')[0],
+                                        time: now.toTimeString().slice(0, 5) // HH:MM format
+                                    }));
+                                }}
+                                className={`px-4 py-3 rounded-lg text-sm transition-colors duration-500 whitespace-nowrap
+                    ${isDarkMode ? 'bg-emerald-700 text-white hover:bg-emerald-600' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
+                            >
+                                Now
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Location Selection (Beach dropdown + manual input + buttons) */}

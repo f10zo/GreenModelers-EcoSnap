@@ -1,6 +1,3 @@
-// page.js
-// This remains a Server Component by default, which is good for performance.
-
 import PublishCampaignForm from './PublishCampaignForm';
 
 export default function CampaignFormPage() {

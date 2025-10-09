@@ -1,7 +1,7 @@
 // src/app/home/components/UploadForm.js
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from 'next/navigation';
 import { db, storage } from "../../../firebase"; // Assuming this path is correct
 import { collection, addDoc } from "firebase/firestore";
@@ -49,9 +49,19 @@ export default function UploadForm({ onUploadSuccess }) {
     // Theme state
     const [currentTheme, setCurrentTheme] = useState("light");
 
+    // --- Navbar height adjustment ---
+    const [navbarHeight, setNavbarHeight] = useState(null); // start as null
+    const containerRef = useRef();
+
     const resetFileInput = () => {
         setFileInputKey(prev => prev + 1);
     };
+
+    useEffect(() => {
+        // Only run on client
+        const nav = document.querySelector("nav");
+        if (nav) setNavbarHeight(nav.offsetHeight);
+    }, []);
 
 
     // Helper function to call your API route for reverse geocoding
@@ -308,11 +318,14 @@ export default function UploadForm({ onUploadSuccess }) {
     };
 
     const isDarkMode = currentTheme.includes('dark');
+    if (navbarHeight === null) return null;
 
     return (
         <div
+            ref={containerRef}
             className="w-full max-w-4xl rounded-3xl p-6 relative overflow-y-auto border-2 shadow-2xl transition-colors duration-500"
             style={{
+                marginTop: navbarHeight, // <-- safe now, won't break SSR
                 backdropFilter: "blur(12px)",
                 backgroundColor: isDarkMode ? "rgba(15, 23, 42, 0.7)" : "rgba(255, 255, 255, 0.35)",
                 borderColor: isDarkMode ? "#22c55e" : "#4ade80",
@@ -334,9 +347,8 @@ export default function UploadForm({ onUploadSuccess }) {
 
             <form onSubmit={(e) => { e.preventDefault(); handleUpload(); }} className="space-y-6">
 
-                {/* 1. Image Uploader Section */}
+                {/* 1. Image Uploader */}
                 <ImageUploader
-                    // Pass the new handler to ImageUploader
                     handleImageChange={handleImageChange}
                     preview={preview}
                     setPreview={setPreview}
@@ -349,13 +361,11 @@ export default function UploadForm({ onUploadSuccess }) {
                     setFileInputKey={setFileInputKey}
                 />
 
-                {/* 2. Description and Pollution Level */}
+                {/* 2. Description & Pollution Level */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Description Field */}
+                    {/* Description */}
                     <div>
-                        <label htmlFor="description" className="block text-lg font-medium mb-1">
-                            Description
-                        </label>
+                        <label htmlFor="description" className="block text-lg font-medium mb-1">Description</label>
                         <textarea
                             id="description"
                             value={description}
@@ -363,58 +373,33 @@ export default function UploadForm({ onUploadSuccess }) {
                             rows="3"
                             placeholder="Describe the pollution (e.g., plastic bottles, oil spill, etc.)"
                             className={`p-3 border rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full
-                ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}
+                                ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}
                         ></textarea>
                     </div>
 
-                    {/* Pollution Level Field with Colors */}
+                    {/* Pollution Level */}
                     <div>
-                        <label htmlFor="pollutionLevel" className="block text-lg font-medium mb-1">
-                            Pollution Level *
-                        </label>
+                        <label htmlFor="pollutionLevel" className="block text-lg font-medium mb-1">Pollution Level *</label>
                         <select
                             id="pollutionLevel"
                             value={pollutionLevel}
                             onChange={(e) => setPollutionLevel(e.target.value)}
-                            // Apply dynamic color class to the SELECT element for the currently chosen value
                             className={`p-3 border rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full appearance-none transition duration-150 ease-in-out font-semibold
-                ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}
-                ${getLevelColorClass(pollutionLevel, isDarkMode)}`}
+                                ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}
+                                ${getLevelColorClass(pollutionLevel, isDarkMode)}`}
                             required
                         >
-                            {/* Low Level Option: Green */}
-                            <option
-                                value="Low"
-                                className={`font-semibold ${isDarkMode ? 'bg-gray-700 text-green-400' : 'bg-white text-green-700'}`}
-                            >
-                                Low (Few items)
-                            </option>
-
-                            {/* Medium Level Option: Orange */}
-                            <option
-                                value="Medium"
-                                className={`font-semibold ${isDarkMode ? 'bg-gray-700 text-yellow-400' : 'bg-white text-orange-600'}`}
-                            >
-                                Medium (Scattered area)
-                            </option>
-
-                            {/* High Level Option: Red */}
-                            <option
-                                value="High"
-                                className={`font-semibold ${isDarkMode ? 'bg-gray-700 text-red-400' : 'bg-white text-red-700'}`}
-                            >
-                                High (Major accumulation/Spill)
-                            </option>
+                            <option value="Low" className={`font-semibold ${isDarkMode ? 'bg-gray-700 text-green-400' : 'bg-white text-green-700'}`}>Low (Few items)</option>
+                            <option value="Medium" className={`font-semibold ${isDarkMode ? 'bg-gray-700 text-yellow-400' : 'bg-white text-orange-600'}`}>Medium (Scattered area)</option>
+                            <option value="High" className={`font-semibold ${isDarkMode ? 'bg-gray-700 text-red-400' : 'bg-white text-red-700'}`}>High (Major accumulation/Spill)</option>
                         </select>
                     </div>
                 </div>
 
-                {/* 3. Date and Time Input */}
+                {/* 3. Date & Time */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="date" className="block text-lg font-medium mb-1">
-                            Date of Sighting
-                        </label>
+                        <label htmlFor="date" className="block text-lg font-medium mb-1">Date of Sighting</label>
                         <input
                             type="date"
                             id="date"
@@ -422,13 +407,11 @@ export default function UploadForm({ onUploadSuccess }) {
                             onChange={(e) => setDateValue(e.target.value)}
                             max={dateInput}
                             className={`p-3 border rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full
-                ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}
+                                ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}
                         />
                     </div>
                     <div className="flex flex-col">
-                        <label htmlFor="time" className="block text-lg font-medium mb-1">
-                            Time of Sighting
-                        </label>
+                        <label htmlFor="time" className="block text-lg font-medium mb-1">Time of Sighting</label>
                         <div className="flex gap-2">
                             <input
                                 type="time"
@@ -436,20 +419,14 @@ export default function UploadForm({ onUploadSuccess }) {
                                 value={timeValue}
                                 onChange={(e) => setTimeValue(e.target.value)}
                                 className={`flex-1 p-3 border rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block
-                    ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}
+                                    ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}
                             />
-                            <button
-                                type="button"
-                                onClick={() => { setDateValue(dateInput); setTimeValue(time); }}
-                                className="p-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                            >
-                                Now
-                            </button>
+                            <button type="button" onClick={() => { setDateValue(dateInput); setTimeValue(time); }} className="p-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">Now</button>
                         </div>
                     </div>
                 </div>
 
-                {/* 4. Location Picker Section */}
+                {/* 4. Location Picker */}
                 <LocationPicker
                     manualLocation={manualLocation}
                     setManualLocation={setManualLocation}
@@ -466,7 +443,7 @@ export default function UploadForm({ onUploadSuccess }) {
                     currentTheme={currentTheme}
                 />
 
-                {/* 5. Upload Status and Actions */}
+                {/* 5. Upload Status & Actions */}
                 <div className="mt-8 pt-4 border-t border-gray-700">
                     {currentUploadTask && progress > 0 && progress < 100 && (
                         <div className="mb-4">

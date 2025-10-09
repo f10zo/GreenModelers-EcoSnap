@@ -5,15 +5,10 @@ import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { useEffect, useState } from 'react';
 
-// 🛑 REMOVED: The global icon fix code was removed from here.
-// It is moved inside the useEffect hook in the DynamicMap component below.
-
-
-// A utility to get the theme on the client-side
+// Hook to get current theme on client-side
 const useClientTheme = () => {
     const [theme, setTheme] = useState('light');
     useEffect(() => {
-        // This check is a safe guard, but the 'use client' and useEffect should handle it.
         if (typeof document === 'undefined') return;
 
         const observer = new MutationObserver(() => {
@@ -26,25 +21,31 @@ const useClientTheme = () => {
     return theme;
 };
 
-// New component to handle map position updates
+// MapUpdater safely flies to center only when map is ready
 function MapUpdater({ center }) {
     const map = useMap();
+
     useEffect(() => {
-        if (center) {
+        if (!map || !center) return;
+
+        map.whenReady(() => {
             map.flyTo(center, 11, {
                 animate: true,
                 duration: 1.5,
             });
-        }
-    }, [center, map]);
+        });
+    }, [map, center]);
+
     return null;
 }
 
+// Calculate center of campaigns; fallback if none available
 const calculateCenter = (campaigns) => {
-    const valid = campaigns.filter(c => typeof c.locationLat === 'number' && typeof c.locationLon === 'number');
-    if (valid.length === 0) {
-        return [32.85, 35.55]; // Default center (Sea of Galilee)
-    }
+    const valid = campaigns.filter(
+        (c) => typeof c.locationLat === 'number' && typeof c.locationLon === 'number'
+    );
+    if (valid.length === 0) return [32.85, 35.55]; // Default center
+
     const latSum = valid.reduce((sum, c) => sum + c.locationLat, 0);
     const lonSum = valid.reduce((sum, c) => sum + c.locationLon, 0);
     return [latSum / valid.length, lonSum / valid.length];
@@ -55,8 +56,7 @@ export default function DynamicMap({ campaigns = [] }) {
     const isDarkMode = theme === 'dark';
     const mapCenter = calculateCenter(campaigns);
 
-    // 🚀 THE CRITICAL FIX: Leaflet icon setup runs only after the component mounts
-    // and the window object is available in the browser.
+    // Setup Leaflet default icon only once on client
     useEffect(() => {
         if (typeof window !== 'undefined' && L) {
             delete L.Icon.Default.prototype._getIconUrl;
@@ -66,13 +66,18 @@ export default function DynamicMap({ campaigns = [] }) {
                 shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
             });
         }
-    }, []); // Empty dependency array ensures it runs only once on mount.
-
+    }, []);
 
     return (
         <div className="w-full h-[70vh] rounded-2xl overflow-hidden">
             {mapCenter && (
-                <MapContainer center={mapCenter} zoom={11} scrollWheelZoom={false} className="w-full h-full">
+                <MapContainer
+                    key={mapCenter.join(',')} // Prevent "container being reused" error
+                    center={mapCenter}
+                    zoom={11}
+                    scrollWheelZoom={false}
+                    className="w-full h-full"
+                >
                     <MapUpdater center={mapCenter} />
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -80,7 +85,8 @@ export default function DynamicMap({ campaigns = [] }) {
                     />
                     {campaigns.map(
                         (c) =>
-                            typeof c.locationLat === 'number' && typeof c.locationLon === 'number' && (
+                            typeof c.locationLat === 'number' &&
+                            typeof c.locationLon === 'number' && (
                                 <Marker key={c.id} position={[c.locationLat, c.locationLon]}>
                                     <Popup className={`max-w-xs ${isDarkMode ? 'dark-mode-popup' : ''}`}>
                                         <div className={`p-2 ${isDarkMode ? 'text-emerald-500' : 'text-gray-800'}`}>

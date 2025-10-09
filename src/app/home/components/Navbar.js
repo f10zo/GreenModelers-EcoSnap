@@ -51,14 +51,14 @@ export default function Navbar() {
   });
 
   return (
-    <header className="sticky top-0 z-50 w-full">
+    <header className="fixed top-0 left-0 w-full z-50">
       <nav className="flex items-center justify-between flex-wrap p-2">
 
         {/* Left: Logo + links */}
         <div className="flex items-center space-x-6">
           <div className="flex items-center group hover:scale-105 transition-transform duration-300">
             <Image
-              src={currentTheme.includes('dark') ? "/eco_logo_dark.png" : "/eco_logo_light.png"}
+              src={currentTheme.includes('dark') ? "/eco_logo_dark1.png" : "/eco_logo_light1.png"}
               alt="EcoSnap Logo"
               width={90}
               height={70}

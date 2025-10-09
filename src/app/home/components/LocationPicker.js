@@ -29,8 +29,8 @@ export default function LocationPicker({
     isMapVisible,
     setIsMapVisible,
     currentTheme,
-    photoGpsLat,  // Add these new props
-    photoGpsLon,  // Add these new props
+    photoGpsLat,
+    photoGpsLon,
 }) {
     const [searchStatusMessage, setSearchStatusMessage] = useState("");
     const [apiErrorMessage, setApiErrorMessage] = useState("");
@@ -75,7 +75,6 @@ export default function LocationPicker({
         setIsDropdownVisible(false);
         setIsDropdownSelected(true);
         setSearchStatusMessage(`Location set to ${beach.name}.`);
-        setIsMapVisible(true);
     };
 
     // --- Geocoding Logic (Manual Search) ---
@@ -211,15 +210,15 @@ export default function LocationPicker({
         setApiErrorMessage("");
     };
 
-    // Add effect to handle GPS from photos
+    const [photoLocationSet, setPhotoLocationSet] = useState(false);
+
     useEffect(() => {
-        if (photoGpsLat && photoGpsLon) {
+        if (!photoLocationSet && photoGpsLat != null && photoGpsLon != null) {
             setLat(photoGpsLat);
             setLon(photoGpsLon);
             setIsMapVisible(true);
             setSearchStatusMessage("📍 Location detected from photo metadata");
-            
-            // Try to get location name
+
             geocodeAddress(photoGpsLat, photoGpsLon, '798aff4296834f94ae8593ec7f2146b5')
                 .then(result => {
                     if (result) {
@@ -232,15 +231,18 @@ export default function LocationPicker({
                     }
                 })
                 .catch(console.error);
+
+            // ✅ Mark it so this effect will never run again
+            setPhotoLocationSet(true);
         }
-    }, [photoGpsLat, photoGpsLon]);
+    }, [photoGpsLat, photoGpsLon, photoLocationSet]);
 
 
     return (
         <div className="space-y-4">
             {/* Location Input and Dropdown */}
             <div className="relative">
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-lg font-medium mb-1">
                     Location (Beach, Area, or Search) *
                 </label>
                 <div className="flex">
@@ -250,11 +252,10 @@ export default function LocationPicker({
                         onChange={handleInputChange}
                         placeholder="e.g., Amnion Bay or Tiberias"
                         className={`flex-1 p-3 border ${!manualLocation ? 'rounded-l-lg' : ''} focus:ring-emerald-500 focus:border-emerald-500 block w-full
-                            ${currentTheme === 'dark' ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}
+                    ${currentTheme === 'dark' ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}
                         disabled={isDropdownSelected}
                     />
 
-                    {/* NEW CLEAR BUTTON - Next to the input field */}
                     {manualLocation && (
                         <button
                             onClick={handleClearLocation}
@@ -275,24 +276,25 @@ export default function LocationPicker({
                         <FiSearch className="inline-block" />
                     </button>
                 </div>
-
-                {isDropdownVisible && (
-                    <ul className={`absolute z-10 w-full mt-1 border rounded-lg shadow-lg max-h-60 overflow-y-auto ${currentTheme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                        {filteredBeaches.map((beach) => (
-                            <li
-                                key={beach.id}
-                                onClick={() => selectBeach(beach)}
-                                className={`p-3 cursor-pointer ${currentTheme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} transition-colors duration-150`}
-                            >
-                                {beach.name} ({beach.english})
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
+                {
+                    isDropdownVisible && (
+                        <ul className={`absolute z-10 w-full mt-1 border rounded-lg shadow-lg max-h-60 overflow-y-auto ${currentTheme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                            {filteredBeaches.map((beach) => (
+                                <li
+                                    key={beach.id}
+                                    onClick={() => selectBeach(beach)}
+                                    className={`p-3 cursor-pointer ${currentTheme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} transition-colors duration-150`}
+                                >
+                                    {beach.name} ({beach.english})
+                                </li>
+                            ))}
+                        </ul>
+                    )
+                }
+            </div >
 
             {/* Location Buttons - Reverted to two-column grid */}
-            <div className="grid grid-cols-2 gap-2 justify-between">
+            < div className="grid grid-cols-2 gap-2 justify-between" >
                 <button
                     onClick={handleAutoLocation}
                     disabled={autoLocationTriggered}
@@ -309,32 +311,50 @@ export default function LocationPicker({
                     <FiMapPin className="inline-block mr-2" />
                     Show on Map
                 </button>
-            </div>
+            </div >
 
             {/* Status and Coordinates */}
-            {searchStatusMessage && (
-                <p className={`text-sm ${searchStatusMessage.includes("Error") ? 'text-red-500' : 'text-emerald-500'} transition-colors duration-500`}>
-                    {searchStatusMessage}
-                </p>
-            )}
-            {lat && lon && (
-                <p className="text-sm">
-                    Coordinates: **Lat: {lat.toFixed(5)}, Lon: {lon.toFixed(5)}**
-                </p>
-            )}
-
-            {/* Map Component */}
+            {
+                searchStatusMessage && (
+                    <p className={`text-sm ${searchStatusMessage.includes("Error") ? 'text-red-500' : 'text-emerald-500'} transition-colors duration-500`}>
+                        {searchStatusMessage}
+                    </p>
+                )
+            }
+            {
+                lat && lon && (
+                    <p className="text-sm">
+                        Coordinates: **Lat: {lat.toFixed(5)}, Lon: {lon.toFixed(5)}**
+                    </p>
+                )
+            }
+            {/* Map Component with Close Button Overlay */}
             {isMapVisible && lat && lon && (
-                <div className="border-2 rounded-lg overflow-hidden h-64 mt-4">
-                    <Suspense fallback={<p className="p-4">Map is loading...</p>}>
-                        <PickedLocationMap
-                            lat={lat}
-                            lon={lon}
-                            theme={currentTheme === 'dark' ? 'dark' : 'light'}
-                        />
-                    </Suspense>
+                <div className="relative h-64 mt-4">
+                    {/* The Close Button (X) */}
+                    <button
+                        onClick={() => setIsMapVisible(false)} // Close map
+                        type="button"
+                        className="absolute top-2 right-2 z-[9999] p-1.5 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-lg transition-all"
+                        title="Close Map"
+                    >
+                        <FiXCircle className="w-5 h-5" />
+                    </button>
+
+                    {/* Map Container */}
+                    <div className="relative border-2 rounded-lg overflow-hidden w-full h-full z-0">
+                        <Suspense fallback={<p className="p-4">Map is loading...</p>}>
+                            <PickedLocationMap
+                                lat={lat}
+                                lon={lon}
+                                theme={currentTheme === 'dark' ? 'dark' : 'light'}
+                                onClose={() => setIsMapVisible(false)}
+                            />
+                        </Suspense>
+                    </div>
                 </div>
             )}
-        </div>
+
+        </div >
     );
 }

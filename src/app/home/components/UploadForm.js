@@ -34,10 +34,12 @@ export default function UploadForm({ onUploadSuccess }) {
     const [imageLocation, setImageLocation] = useState(null);
     const [address, setAddress] = useState(null);
 
-
     // Coordinates state for map and location setting
     const [lat, setLat] = useState(null);
     const [lon, setLon] = useState(null);
+
+    // **NEW STATE**: Track if location was set by EXIF data
+    const [isLocationFromImage, setIsLocationFromImage] = useState(false);
 
     // Date/Time
     const { dateInput, time } = getCurrentDateTime();
@@ -88,18 +90,25 @@ export default function UploadForm({ onUploadSuccess }) {
     const handleImageChange = async (file, dataUrl, exiFlat, exiFlon) => {
         setPreview(dataUrl);
 
-        // Handle clearing state when no file is selected
+        // --- NEW LOGIC: Handle Clearing Image ---
         if (!file) {
             setFile(null);
-            setLat(null);
-            setLon(null);
-            setLocation("");
-            setManualLocation("");
+            setPreview(null); // Clear preview when file is null
+            // Only reset coordinates if they were set by the image (i.e., EXIF data was present)
+            if (isLocationFromImage) {
+                setLat(null);
+                setLon(null);
+                setLocation("");
+                setManualLocation("");
+                setIsLocationFromImage(false);
+            }
+            // If the user had manually set a location, we preserve it.
             setImageLocation(null);
             setAddress(null);
-            console.log("Image cleared. State reset.");
+            console.log("Image cleared. Preserving manually set location.");
             return;
         }
+        // --- END NEW LOGIC ---
 
         setFile(file);
 
@@ -114,26 +123,27 @@ export default function UploadForm({ onUploadSuccess }) {
             // Set coordinates for the map
             setLat(latValue);
             setLon(lonValue);
+            // Flag the location as coming from the image
+            setIsLocationFromImage(true);
 
-            // Clear pre-selected beach/dropdown location
+            // Clear pre-selected beach/dropdown location (since we have precise EXIF data)
             setLocation("");
 
             // Reverse geocode the coordinates to get a readable address
             await reverseGeocode(latValue, lonValue);
 
         } else {
-            console.log("No GPS data received from ImageUploader.");
+            console.log("No GPS data received from ImageUploader. Keeping current location if manually set.");
             setImageLocation(null);
-            // Clear auto-set coordinates
-            setLat(null);
-            setLon(null);
-            setLocation("");
-            setManualLocation("");
+            // If no EXIF data, we DO NOT reset the existing lat/lon state.
+            // This preserves the location the user may have picked manually.
+            setIsLocationFromImage(false); // Clear flag
         }
     };
 
 
     // --- State Persistence (Local Storage) ---
+    // Make sure to add the new state variable to load/save
     const loadFormState = () => {
         const storedState = localStorage.getItem('uploadFormState');
         if (storedState) {
@@ -148,6 +158,7 @@ export default function UploadForm({ onUploadSuccess }) {
             setPreview(state.preview || null);
             setLat(state.lat || null);
             setLon(state.lon || null);
+            setIsLocationFromImage(state.isLocationFromImage || false); // ⬅️ ADDED
         }
     };
 
@@ -163,13 +174,14 @@ export default function UploadForm({ onUploadSuccess }) {
             preview,
             lat,
             lon,
+            isLocationFromImage, // ⬅️ ADDED
         };
         localStorage.setItem('uploadFormState', JSON.stringify(state));
     };
 
     useEffect(() => { loadFormState(); }, []);
 
-    useEffect(() => { saveFormState(); }, [description, location, manualLocation, pollutionLevel, dateValue, timeValue, coordinates, preview, lat, lon]);
+    useEffect(() => { saveFormState(); }, [description, location, manualLocation, pollutionLevel, dateValue, timeValue, coordinates, preview, lat, lon, isLocationFromImage]); // ⬅️ ADDED isLocationFromImage
 
     // --- Theme Observer ---
     useEffect(() => {
@@ -251,7 +263,7 @@ export default function UploadForm({ onUploadSuccess }) {
                         location: locationToSave,
                         coordinates: lat && lon ? `Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)}` : "N/A",
                         pollution_level: pollutionLevel,
-                        date: `${dateValue} ${timeValue}`, // Use input fields, not current time
+                        date: `${dateValue} ${timeValue}`,
                         timestamp: new Date().toISOString(),
                     });
 
@@ -270,6 +282,7 @@ export default function UploadForm({ onUploadSuccess }) {
                     setCoordinates("");
                     setLat(null);
                     setLon(null);
+                    setIsLocationFromImage(false); // ⬅️ RESET NEW STATE
                     localStorage.removeItem('uploadFormState');
                     setSuccessMessage("Upload successful! Your report is now in the gallery.");
                     setTimeout(() => { setSuccessMessage(""); }, 5000);
@@ -340,7 +353,7 @@ export default function UploadForm({ onUploadSuccess }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Description Field */}
                     <div>
-                        <label htmlFor="description" className="block text-sm font-medium mb-1">
+                        <label htmlFor="description" className="block text-lg font-medium mb-1">
                             Description
                         </label>
                         <textarea
@@ -356,7 +369,7 @@ export default function UploadForm({ onUploadSuccess }) {
 
                     {/* Pollution Level Field with Colors */}
                     <div>
-                        <label htmlFor="pollutionLevel" className="block text-sm font-medium mb-1">
+                        <label htmlFor="pollutionLevel" className="block text-lg font-medium mb-1">
                             Pollution Level *
                         </label>
                         <select
@@ -395,11 +408,11 @@ export default function UploadForm({ onUploadSuccess }) {
                         </select>
                     </div>
                 </div>
-                
+
                 {/* 3. Date and Time Input */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="date" className="block text-sm font-medium mb-1">
+                        <label htmlFor="date" className="block text-lg font-medium mb-1">
                             Date of Sighting
                         </label>
                         <input
@@ -409,11 +422,11 @@ export default function UploadForm({ onUploadSuccess }) {
                             onChange={(e) => setDateValue(e.target.value)}
                             max={dateInput}
                             className={`p-3 border rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full
-                                ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}
+                ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}
                         />
                     </div>
                     <div className="flex flex-col">
-                        <label htmlFor="time" className="block text-sm font-medium mb-1">
+                        <label htmlFor="time" className="block text-lg font-medium mb-1">
                             Time of Sighting
                         </label>
                         <div className="flex gap-2">
@@ -423,7 +436,7 @@ export default function UploadForm({ onUploadSuccess }) {
                                 value={timeValue}
                                 onChange={(e) => setTimeValue(e.target.value)}
                                 className={`flex-1 p-3 border rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block
-                                    ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}
+                    ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}
                             />
                             <button
                                 type="button"

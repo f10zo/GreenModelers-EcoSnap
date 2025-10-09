@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link"; // <-- Import the Link component
+import Link from "next/link";
 
 export default function AboutPage() {
     const [currentTheme, setCurrentTheme] = useState("light");
+    const [navbarHeight, setNavbarHeight] = useState(0);
 
     useEffect(() => {
         const savedTheme = localStorage.getItem("theme");
@@ -20,12 +21,25 @@ export default function AboutPage() {
             attributeFilter: ["class"],
         });
 
-        return () => observer.disconnect();
+        // Get navbar height dynamically
+        const updateNavbarHeight = () => {
+            const navbar = document.querySelector("header");
+            if (navbar) setNavbarHeight(navbar.offsetHeight);
+        };
+        updateNavbarHeight();
+        window.addEventListener("resize", updateNavbarHeight);
+
+        return () => {
+            observer.disconnect();
+            window.removeEventListener("resize", updateNavbarHeight);
+        };
     }, []);
 
     const isDarkMode = currentTheme.includes("dark");
 
-    const headerBgClass = `w-full rounded-3xl p-8 mb-6 backdrop-blur-sm transition-colors duration-500 font-sans ${isDarkMode ? "bg-emerald-950/60 text-white border border-emerald-800" : "bg-emerald-100/50 text-emerald-900 border border-emerald-200"
+    const headerBgClass = `w-full rounded-3xl p-8 mb-6 backdrop-blur-sm transition-colors duration-500 font-sans ${isDarkMode
+            ? "bg-emerald-950/60 text-white border border-emerald-800"
+            : "bg-emerald-100/50 text-emerald-900 border border-emerald-200"
         }`;
 
     const sectionClass = `w-full shadow-xl rounded-3xl p-6 mb-4 transition-all duration-500 border-2 ${isDarkMode
@@ -40,7 +54,7 @@ export default function AboutPage() {
         }`;
 
     return (
-        <div className="flex flex-col items-center pt-2 px-4">
+        <main style={{ paddingTop: `${navbarHeight}px` }} className="flex flex-col items-center pt-2 px-4 transition-colors duration-500">
             <div className="max-w-4xl w-full">
                 {/* Page Header */}
                 <div className={headerBgClass}>
@@ -76,7 +90,7 @@ export default function AboutPage() {
                     </div>
 
                     {/* How to Help */}
-                    <Link href="/published-campaigns" passHref> {/* <-- The Link component wraps the section */}
+                    <Link href="/published-campaigns" passHref>
                         <div className={`${sectionClass} cursor-pointer hover:scale-[1.02]`}>
                             <div className="flex items-start gap-3">
                                 <div className="text-3xl p-2 rounded-full">🤝</div>
@@ -91,6 +105,6 @@ export default function AboutPage() {
                     </Link>
                 </div>
             </div>
-        </div>
+        </main>
     );
 }

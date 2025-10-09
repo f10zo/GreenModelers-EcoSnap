@@ -51,7 +51,7 @@ export default function Navbar() {
   });
 
   return (
-    <header className={`sticky top-0 z-50 w-full ${currentTheme.includes('dark') ? 'bg-gray-900/70' : 'bg-white/70'} backdrop-blur-md shadow-md`}>
+    <header className="sticky top-0 z-50 w-full">
       <nav className="flex items-center justify-between flex-wrap p-2">
 
         {/* Left: Logo + links */}
@@ -163,7 +163,7 @@ export default function Navbar() {
                   onMouseEnter={() => setActiveButton(link.name)}
                   onMouseLeave={() => setActiveButton(null)}
                   onMouseDown={() => setActiveButton(link.name)}
-                  onMouseUp={() => setActiveButton(null)}
+                  onMouseUp={() => setActiveButton(link.name)}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {link.icon}

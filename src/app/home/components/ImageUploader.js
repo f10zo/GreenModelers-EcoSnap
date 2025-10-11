@@ -5,6 +5,9 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { FiUpload, FiCamera } from "react-icons/fi";
 import * as piexif from 'piexifjs';
+import { detectObjects } from "@/lib/yolo";
+import { detectCircularNetObjects } from "@/lib/circularnet";
+
 
 
 // Helper function to convert File/Blob to DataURL using native API
@@ -52,6 +55,7 @@ export default function ImageUploader({
     currentTheme,
     fileInputKey,
     setFileInputKey,
+    setDescription,
 }) {
     const [isCameraActive, setIsCameraActive] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
@@ -86,7 +90,7 @@ export default function ImageUploader({
 
     const handleFileChange = async (f) => {
         if (!f) {
-            await handleImageChange(null, null);
+            await handleImageChange(null, null, null, null, null);
             return;
         }
 
@@ -94,108 +98,55 @@ export default function ImageUploader({
             const originalFile = f;
             const dataUrl = await fileToDataUrl(originalFile);
 
+            // Extract GPS if available
             let gps = null;
-
             if (originalFile.type === "image/jpeg") {
                 try {
-                    const GPSLatitude = 2;
-                    const GPSLongitude = 4;
-                    const GPSLatitudeRef = 1;
-                    const GPSLongitudeRef = 3;
-
                     const exifObj = piexif.load(dataUrl);
-
-                    console.log("--- DEBUG: EXIF Object Keys ---", Object.keys(exifObj));
-
                     const gpsData = exifObj["GPS"];
-
-                    // Helper to convert EXIF GPS rational numbers (arrays of [numerator, denominator]) to decimal
                     const dmsToDecimal = (dms, ref) => {
-                        const getFloat = (rational) => {
-                            if (!rational || rational.length < 2 || typeof rational[0] !== 'number' || typeof rational[1] !== 'number') {
-                                console.error("Malformed rational number array:", rational);
-                                return 0;
-                            }
-                            if (rational[1] === 0) {
-                                console.error("Division by zero in rational number:", rational);
-                                return 0;
-                            }
-                            return rational[0] / rational[1];
-                        };
-
-                        // Structural check
-                        if (!dms || dms.length < 3 || !Array.isArray(dms[0])) {
-                            console.error("Malformed DMS array structure:", dms);
-                            return NaN;
-                        }
-
-                        try {
-                            const degVal = getFloat(dms[0]);
-                            const minVal = getFloat(dms[1]);
-                            const secVal = getFloat(dms[2]);
-
-                            console.log(`DEBUG: Calculated values (DMS): ${degVal}, ${minVal}, ${secVal}`);
-
-                            let dec = degVal + minVal / 60 + secVal / 3600;
-                            const cleanRef = String(ref).replace(/[^\w]/g, '').toUpperCase();
-
-                            if (cleanRef === "S" || cleanRef === "W") dec = -dec;
-
-                            return dec;
-                        } catch (e) {
-                            console.error("Parsing failure in dmsToDecimal:", e);
-                            return NaN;
-                        }
+                        const getFloat = (rational) => (rational && rational.length === 2 ? rational[0] / rational[1] : 0);
+                        if (!dms || dms.length < 3) return NaN;
+                        let dec = getFloat(dms[0]) + getFloat(dms[1]) / 60 + getFloat(dms[2]) / 3600;
+                        const cleanRef = String(ref).replace(/[^\w]/g, '').toUpperCase();
+                        if (cleanRef === "S" || cleanRef === "W") dec = -dec;
+                        return dec;
                     };
-
                     if (gpsData) {
-                        console.log("--- DEBUG: Raw GPS Data Found ---", gpsData);
-
-                        // --- CRITICAL FIX START ---
-                        const rawLat = gpsData[GPSLatitude];
-                        const rawLon = gpsData[GPSLongitude];
-
-                        let lat = NaN;
-                        let lon = NaN;
-
-                        if (rawLat) {
-                            lat = dmsToDecimal(rawLat, gpsData[GPSLatitudeRef]);
-                        } else {
-                            console.warn("Raw Latitude data (tag 2) is missing from EXIF GPS block.");
-                        }
-
-                        if (rawLon) {
-                            lon = dmsToDecimal(rawLon, gpsData[GPSLongitudeRef]);
-                        } else {
-                            console.warn("Raw Longitude data (tag 4) is missing from EXIF GPS block.");
-                        }
-                        // --- CRITICAL FIX END ---
-
-                        if (typeof lat === 'number' && typeof lon === 'number' && !isNaN(lat) && !isNaN(lon)) {
-                            gps = { lat, lon };
-                        } else {
-                            console.warn("GPS data found, but coordinates could not be parsed.");
-                        }
-
-                    } else {
-                        console.warn("No GPS data found in image EXIF.");
+                        const lat = gpsData[2] ? dmsToDecimal(gpsData[2], gpsData[1]) : NaN;
+                        const lon = gpsData[4] ? dmsToDecimal(gpsData[4], gpsData[3]) : NaN;
+                        if (!isNaN(lat) && !isNaN(lon)) gps = { lat, lon };
                     }
-
                 } catch (exifErr) {
                     console.error("EXIF read failed:", exifErr);
                 }
             }
 
-            await handleImageChange(originalFile, dataUrl, gps?.lat, gps?.lon);
+            // --- Object Detection ---
+            // 1️⃣ YOLO
+            let yoloResults = [];
+            try { yoloResults = await detectObjects(originalFile); } catch (err) { console.error("YOLO detection failed:", err); }
 
-            setIsCameraActive(false);
+            // 2️⃣ CircularNet
+            let trashResults = [];
+            try { trashResults = await detectCircularNetObjects(originalFile); } catch (err) { console.error("CircularNet detection failed:", err); }
+
+            // 3️⃣ Combine and remove duplicates
+            const combinedResults = [...new Set([...yoloResults, ...trashResults])];
+            const desc = combinedResults.length ? combinedResults.join(", ") : "No objects detected";
+            setDescription(desc);
+
+            // Pass to parent
+            await handleImageChange(originalFile, dataUrl, gps?.lat, gps?.lon, combinedResults);
 
         } catch (error) {
             console.error("File processing failed:", error);
             alert("There was an error processing the image. Please try a different file.");
-            await handleImageChange(null, null);
+            await handleImageChange(null, null, null, null, null);
         }
     };
+
+
 
     // Helper to receive files from input, drag/drop, or camera capture
     const handleFileInput = (event) => {
@@ -241,7 +192,6 @@ export default function ImageUploader({
         };
     }, []);
 
-    // Update the handleCapturePhoto function
     const handleCapturePhoto = async (e) => {
         if (e) {
             e.preventDefault();
@@ -250,7 +200,6 @@ export default function ImageUploader({
 
         const video = videoRef.current;
         const canvas = canvasRef.current;
-
         if (!video || !canvas) return;
 
         canvas.width = video.videoWidth;
@@ -261,32 +210,39 @@ export default function ImageUploader({
 
         canvas.toBlob(async (blob) => {
             const capturedFile = new File([blob], "captured_photo.jpeg", { type: "image/jpeg" });
-
-            // Get GPS location first
             let gps = null;
-            try {
-                gps = await getCurrentGpsLocation();
-                console.log("GPS obtained:", gps);
-            } catch (err) {
-                console.warn("GPS acquisition failed:", err);
-            }
+            try { gps = await getCurrentGpsLocation(); } catch { }
 
             const dataUrl = await fileToDataUrl(capturedFile);
 
-            // Stop video stream
-            if (videoStreamRef.current) {
-                videoStreamRef.current.getTracks().forEach(track => track.stop());
-            }
+            // --- Object Detection ---
+            // 1️⃣ YOLO
+            let yoloResults = [];
+            try { yoloResults = await detectObjects(capturedFile); } catch (err) { console.error("YOLO detection failed:", err); }
 
-            // Pass data to parent
+            // 2️⃣ CircularNet
+            let trashResults = [];
+            try { trashResults = await detectCircularNetObjects(capturedFile); } catch (err) { console.error("CircularNet detection failed:", err); }
+
+            // 3️⃣ Combine and remove duplicates
+            const combinedResults = [...new Set([...yoloResults, ...trashResults])];
+            const desc = combinedResults.length ? combinedResults.join(", ") : "No objects detected";
+            setDescription(desc);
+
+            // Stop camera
+            if (videoStreamRef.current) videoStreamRef.current.getTracks().forEach(t => t.stop());
+
+            // Pass to parent
             await handleImageChange(
                 capturedFile,
                 dataUrl,
                 gps?.latitude || null,
-                gps?.longitude || null
+                gps?.longitude || null,
+                combinedResults
             );
 
             setIsCameraActive(false);
+
         }, "image/jpeg");
     };
 
@@ -427,17 +383,12 @@ export default function ImageUploader({
 
             <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
 
-            {/* This block displays the image and location info WHEN 'preview' is set */}
             {preview && (
                 <div className="relative border rounded-lg overflow-hidden mt-4">
-                    {/* 🛑 FIX: The GPS info should be displayed near the image when it's the main view */}
                     {renderGpsInfo()}
-
-                    <Image
+                    <img
                         src={preview}
                         alt="preview"
-                        width={600}
-                        height={400}
                         className="w-full h-auto object-cover"
                     />
                     <button
@@ -449,6 +400,7 @@ export default function ImageUploader({
                     </button>
                 </div>
             )}
+
         </div>
     );
 }

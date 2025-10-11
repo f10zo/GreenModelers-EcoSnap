@@ -16,6 +16,12 @@ import ImageUploader from "./ImageUploader";
 import LocationPicker from "./LocationPicker";
 import piexif from "piexifjs";
 
+import { detectObjects } from "@/lib/yolo";
+import { detectTrashCircularNet } from "@/lib/circularnet";
+import { detectCircularNetObjects } from '@/lib/circularnet'; // Adjust path if needed
+
+
+
 
 export default function UploadForm({ onUploadSuccess }) {
     const router = useRouter();
@@ -53,6 +59,7 @@ export default function UploadForm({ onUploadSuccess }) {
     const [navbarHeight, setNavbarHeight] = useState(null); // start as null
     const containerRef = useRef();
 
+
     const resetFileInput = () => {
         setFileInputKey(prev => prev + 1);
     };
@@ -89,22 +96,27 @@ export default function UploadForm({ onUploadSuccess }) {
         }
     };
 
-    /**
-     * Handles file selection, sets up the preview, and receives the EXIF GPS data
-     * directly from the ImageUploader component.
-     * @param {File | null} file - The original file object.
-     * @param {string | null} dataUrl - The Base64 string of the image.
-     * @param {number | null} exiFlat - The extracted latitude from EXIF.
-     * @param {number | null} exiFlon - The extracted longitude from EXIF.
-     */
-    const handleImageChange = async (file, dataUrl, exiFlat, exiFlon) => {
-        setPreview(dataUrl);
 
-        // --- NEW LOGIC: Handle Clearing Image ---
+
+    /**
+   * Handles file selection, sets up the preview, and receives EXIF GPS data
+   * and YOLO/CircularNet auto description.
+   * @param {File | null} file - The original file object.
+   * @param {string | null} dataUrl - The Base64 string of the image.
+   * @param {number | null} exiFlat - The extracted latitude from EXIF.
+   * @param {number | null} exiFlon - The extracted longitude from EXIF.
+   * @param {string[] | string | null} autoDescription - The YOLO-generated description.
+   */
+    const handleImageChange = async (file, dataUrl, exiFlat, exiFlon, autoDescription) => {
+        // Update preview immediately
+        setPreview(dataUrl);
+        setFile(file);
+
+        // Handle clearing
         if (!file) {
+            setPreview(null);
             setFile(null);
-            setPreview(null); // Clear preview when file is null
-            // Only reset coordinates if they were set by the image (i.e., EXIF data was present)
+            setDescription("")
             if (isLocationFromImage) {
                 setLat(null);
                 setLon(null);
@@ -112,48 +124,64 @@ export default function UploadForm({ onUploadSuccess }) {
                 setManualLocation("");
                 setIsLocationFromImage(false);
             }
-            // If the user had manually set a location, we preserve it.
             setImageLocation(null);
             setAddress(null);
             console.log("Image cleared. Preserving manually set location.");
             return;
         }
-        // --- END NEW LOGIC ---
 
-        setFile(file);
+        // --- Object detection ---
 
+        // 1️⃣ YOLO detection (general objects)
+        let yoloResults = [];
+        if (autoDescription) {
+            // Use YOLO results passed in from ImageUploader
+            yoloResults = Array.isArray(autoDescription) ? autoDescription : [autoDescription];
+        } else {
+            try {
+                yoloResults = await detectObjects(file);
+            } catch (err) {
+                console.error("YOLO detection failed:", err);
+            }
+        }
+
+        // 2️⃣ Trash detection (CircularNet)
+        let trashResults = [];
+        try {
+            trashResults = await detectCircularNetObjects(file); // Returns array of detected trash objects
+        } catch (err) {
+            console.error("CircularNet detection failed:", err);
+        }
+
+        // 3️⃣ Combine results and remove duplicates
+        const combined = [...new Set([].concat(yoloResults, trashResults))];
+        const desc = combined.length ? combined.join(", ") : "No objects detected";
+
+        setDescription(desc);
+        console.log("✅ Combined detected objects:", combined);
+
+        // --- EXIF GPS handling ---
         const latValue = exiFlat;
         const lonValue = exiFlon;
 
         console.log("UploadForm received EXIF coordinates:", { latValue, lonValue });
 
-        if (latValue && lonValue) {
+        if (latValue != null && lonValue != null) {
             console.log("EXIF Location Found and Received:", { latValue, lonValue });
-
-            // Set coordinates for the map
             setLat(latValue);
             setLon(lonValue);
-            // Flag the location as coming from the image
             setIsLocationFromImage(true);
-
-            // Clear pre-selected beach/dropdown location (since we have precise EXIF data)
             setLocation("");
-
-            // Reverse geocode the coordinates to get a readable address
             await reverseGeocode(latValue, lonValue);
-
         } else {
-            console.log("No GPS data received from ImageUploader. Keeping current location if manually set.");
+            setIsLocationFromImage(false);
             setImageLocation(null);
-            // If no EXIF data, we DO NOT reset the existing lat/lon state.
-            // This preserves the location the user may have picked manually.
-            setIsLocationFromImage(false); // Clear flag
+            console.log("No GPS data received from ImageUploader.");
         }
     };
 
 
     // --- State Persistence (Local Storage) ---
-    // Make sure to add the new state variable to load/save
     const loadFormState = () => {
         const storedState = localStorage.getItem('uploadFormState');
         if (storedState) {
@@ -269,13 +297,14 @@ export default function UploadForm({ onUploadSuccess }) {
 
                     await addDoc(collection(db, "reports"), {
                         imageUrl: url,
-                        description,
+                        description: description, // ✅ use state variable
                         location: locationToSave,
                         coordinates: lat && lon ? `Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)}` : "N/A",
                         pollution_level: pollutionLevel,
                         date: `${dateValue} ${timeValue}`,
                         timestamp: new Date().toISOString(),
                     });
+
 
                     if (onUploadSuccess) onUploadSuccess();
 
@@ -359,7 +388,9 @@ export default function UploadForm({ onUploadSuccess }) {
                     currentTheme={currentTheme}
                     fileInputKey={fileInputKey}
                     setFileInputKey={setFileInputKey}
+                    setDescription={setDescription}
                 />
+
 
                 {/* 2. Description & Pollution Level */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

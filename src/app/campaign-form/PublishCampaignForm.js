@@ -1,10 +1,89 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { db } from '../../firebase';
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import dynamic from 'next/dynamic';
+import { galileeBeaches } from "@/lib/utils/constants/beaches";
+
+
+// ====================================================================
+// 📅 DATE UTILITIES
+// ====================================================================
+
+// Utility to format Date object into YYYY-MM-DD string
+const toIsoDateString = (date) => {
+    return date.toISOString().split('T')[0];
+};
+
+// Utility to convert YYYY-MM-DD (ISO) to DD/MM/YYYY format for display/storage
+const isoToDisplayDate = (isoDate) => {
+    if (!isoDate || isoDate.length !== 10) return '';
+    const parts = isoDate.split('-'); // YYYY-MM-DD
+    return `${parts[2]}/${parts[1]}/${parts[0]}`; // DD/MM/YYYY
+};
+
+// Utility to convert DD/MM/YYYY (Display) to YYYY-MM-DD format for input value
+const displayToIsoDate = (displayDate) => {
+    if (!displayDate || displayDate.length !== 10) return '';
+    const parts = displayDate.split('/'); // DD/MM/YYYY
+    // Check if parts are numbers and correct length
+    if (parts.length === 3 && parts[0].length === 2 && parts[1].length === 2 && parts[2].length === 4) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`; // YYYY-MM-DD
+    }
+    return '';
+};
+
+
+/**
+ * Checks if a date string in 'YYYY-MM-DD' format is valid and within the allowed 6-month window.
+ * This is primarily a fallback/final check, as min/max HTML attributes enforce the range in the picker.
+ * It also checks against your specific year requirement (not too far in the future).
+ * @param {string} dateString - The date input from the user (e.g., "2025-10-15").
+ * @param {string} minIsoDate - The minimum allowed date in YYYY-MM-DD.
+ * @param {string} maxIsoDate - The maximum allowed date in YYYY-MM-DD.
+ * @returns {boolean} - True if the date passes all checks, false otherwise.
+ */
+const isDateValidAndInRange = (dateString, minIsoDate, maxIsoDate) => {
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(dateString)) return false;
+
+    const inputDate = new Date(dateString);
+    if (isNaN(inputDate.getTime())) return false; // Invalid date (e.g., 30/02)
+
+    // Normalize comparison dates
+    const minDate = new Date(minIsoDate);
+    minDate.setHours(0, 0, 0, 0);
+
+    // Max date needs to be set to the *end* of its day for accurate comparison
+    const maxDate = new Date(maxIsoDate);
+    maxDate.setHours(23, 59, 59, 999);
+
+    const comparisonDate = new Date(inputDate);
+    comparisonDate.setHours(0, 0, 0, 0);
+
+    // Check if date is within the allowed range (today up to 6 months)
+    if (comparisonDate < minDate) return false;
+    if (comparisonDate > maxDate) return false;
+
+    // Check for years too far in the future (e.g., 2222)
+    const currentYear = new Date().getFullYear();
+    const inputYear = inputDate.getFullYear();
+
+    // This strictly checks that the year is the current year or the year 6 months from now.
+    // Given the 6-month limit, the maximum year should be currentYear + 1.
+    if (inputYear > currentYear + 1) {
+        return false;
+    }
+
+    return true;
+};
+
+// ====================================================================
+// 🛑 END DATE UTILITIES
+// ====================================================================
+
 
 const DynamicSimpleMap = dynamic(
     () => import('./SimpleMapDisplay'),
@@ -25,74 +104,62 @@ export default function PublishCampaignForm() {
     const [lat, setLat] = useState(null);
     const [lon, setLon] = useState(null);
     const [imageFile, setImageFile] = useState(null);
+    const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+
     const [currentTheme, setCurrentTheme] = useState('light');
     const [status, setStatus] = useState("");
 
-    const galileeBeaches = [
-        { id: 'amnion-bay', name: 'מפרץ אמנון', english: 'Amnion Bay', lat: 32.89112, lon: 35.596733 },
-        { id: 'beriniki', name: 'ברניקי', english: 'Beriniki', lat: 32.7616, lon: 35.5579 },
-        { id: 'gai', name: 'גיא', english: 'Gai', lat: 32.78, lon: 35.54 },
-        { id: 'ganim', name: 'גנים', english: 'Ganim', lat: 32.7751, lon: 35.5462 },
-        { id: 'gilan-kinneret-rimonim', name: 'גלי כינרת רימונים', english: 'Gali Kinneret Rimonim', lat: 32.7859, lon: 35.544 },
-        { id: 'golan', name: 'גולן', english: 'Golan', lat: 32.8485, lon: 35.6496 },
-        { id: 'gofra', name: 'גופרה', english: 'Gofra', lat: 32.8028, lon: 35.6433 },
-        { id: 'gino', name: 'ג\'ינו', english: 'Gino', lat: 32.88, lon: 35.57 },
-        { id: 'halukim', name: 'חלוקים', english: 'Halukim', lat: 32.8552, lon: 35.641 },
-        { id: 'hanion-haon', name: 'חניון האון', english: 'Haon Parking', lat: 32.7266, lon: 35.6225 },
-        { id: 'hanion-yarden-kinneret', name: 'חניון ירדן כינרת', english: 'Jordan Kinneret Parking', lat: 32.7117, lon: 35.576 },
-        { id: 'hamei-tiberias', name: 'חמי טבריה', english: 'Hamei Tiberias', lat: 32.7681, lon: 35.5498 },
-        { id: 'hadekel', name: 'הדקל', english: 'Hadekel', lat: 32.767, lon: 35.545 },
-        { id: 'the-diamond', name: 'הדאימונד', english: 'The Diamond', lat: 32.8346, lon: 35.642 },
-        { id: 'hatekhelet', name: 'התכלת', english: 'HaTekhelet', lat: 32.7939, lon: 35.5422 },
-        { id: 'deganya', name: 'דגניה', english: 'Deganya', lat: 32.7087, lon: 35.5789 },
-        { id: 'duga', name: 'דוגה', english: 'Duga', lat: 32.85966, lon: 35.64741 },
-        { id: 'dugit', name: 'דוגית', english: 'Dugit', lat: 32.8499, lon: 35.6489 },
-        { id: 'haon-resort', name: 'נופש האון', english: 'Haon Resort', lat: 32.7243, lon: 35.6188 },
-        { id: 'ein-gev-resort', name: 'נופש עין-גב', english: 'Ein Gev Resort', lat: 32.7681, lon: 35.6393 },
-        { id: 'nof-ginosar', name: 'נוף גינוסר', english: 'Nof Ginosar', lat: 32.85, lon: 35.52 },
-        { id: 'lebanon', name: 'לבנון', english: 'Lebanon', lat: 32.82, lon: 35.65 },
-        { id: 'kinneret', name: 'כינרת', english: 'Kinneret', lat: 32.7846, lon: 35.5416 },
-        { id: 'kursi', name: 'כורסי', english: 'Kursi', lat: 32.8247, lon: 35.6483 },
-        { id: 'maagan-eden', name: 'מעגן עדן', english: 'Maagan Eden', lat: 32.7081, lon: 35.5996 },
-        { id: 'shizaf-rotem', name: 'שיזף-רותם', english: 'Shizaf-Rotem', lat: 32.8002, lon: 35.6411 },
-        { id: 'shikmim', name: 'שקמים', english: 'Shikmim', lat: 32.8611, lon: 35.5586 },
-        { id: 'shket-leonardo', name: 'שקט לאונרדו', english: 'Shket Leonardo', lat: 32.7984, lon: 35.5395 },
-        { id: 'shitaim', name: 'שיטים', english: 'Shitaim', lat: 32.76, lon: 35.64 },
-        { id: 'sironit', name: 'סירונית', english: 'Sironit', lat: 32.784, lon: 35.5403 },
-        { id: 'susita', name: 'סוסיתא', english: 'Susita', lat: 32.7905, lon: 35.6402 },
-        { id: 'sfirit', name: 'ספירית', english: 'Sfirit', lat: 32.8859, lon: 35.583 },
-        { id: 'tzaalon', name: 'צאלון', english: 'Tzaalon', lat: 32.84, lon: 35.65 },
-        { id: 'tzemach', name: 'צמח', english: 'Tzemach', lat: 32.7057, lon: 35.5853 },
-        { id: 'tzinbari', name: 'צינברי', english: 'Tzinbari', lat: 32.7365, lon: 35.5696 },
-        { id: 'the-separated-beach', name: 'החוף הנפרד', english: 'The Separated Beach', lat: 32.7662, lon: 35.5541 },
-        { id: 'the-promenade', name: 'הטיילת', english: 'The Promenade', lat: 32.787, lon: 35.539 },
-        { id: 'raket', name: 'רקת (בורה בורה)', english: 'Raket (Bora Bora)', lat: 32.8, lon: 35.53 },
-        { id: 'restel', name: 'רסטל', english: 'Restel', lat: 32.8242, lon: 35.5166 }
-    ];
+    const [dateError, setDateError] = useState(null);
 
-    const GEOAPIFY_API_KEY = "798aff4296834f94ae8593ec7f2146b5";
+    const GEOAPIFY_API_KEY = process.env.GEOAPIFY_API_KEY;
+
+
+    // 🆕 Calculate min and max date strings for the calendar input
+    const { minDateISO, maxDateISO } = useMemo(() => {
+        const today = new Date();
+        const sixMonthsLater = new Date();
+        // Use the month after the current date + 6 months to define the limit
+        sixMonthsLater.setMonth(today.getMonth() + 6);
+
+        // Normalize to start of day for accurate 'min'
+        today.setHours(0, 0, 0, 0);
+
+        return {
+            minDateISO: toIsoDateString(today),
+            maxDateISO: toIsoDateString(sixMonthsLater),
+        };
+    }, []);
 
     useEffect(() => {
+        // 1. Initialize the observer to watch for class changes on the root HTML element
         const observer = new MutationObserver(() => {
             const newTheme = document.documentElement.className;
+            // The theme change will trigger a state update in React
             setCurrentTheme(newTheme);
         });
 
-        // Observe changes to the class attribute of <html>
+        // 2. Start observing the <html> tag for attribute changes (specifically 'class')
         observer.observe(document.documentElement, {
             attributes: true,
             attributeFilter: ['class']
         });
 
-        // Clean up when component unmounts
+        // 3. Cleanup function: This runs when the component unmounts
         return () => {
             observer.disconnect();
+
+            // 4. Cleanup for the image preview URL (inherited from previous step)
+            if (imagePreviewUrl) {
+                URL.revokeObjectURL(imagePreviewUrl);
+            }
         };
-    }, []);
+        // 5. Dependency array: The imagePreviewUrl needs to be here because it's used in the cleanup return function
+    }, [imagePreviewUrl]);
 
     const [formData, setFormData] = useState({
         campaignName: "",
         organizer: "",
+        // Date is stored in DD/MM/YYYY format
         date: "",
         time: "",
         location: "",
@@ -105,14 +172,103 @@ export default function PublishCampaignForm() {
 
     const handleImageChange = (e) => {
         if (e.target.files[0]) {
-            setImageFile(e.target.files[0]);
+            const file = e.target.files[0];
+
+            setImageFile(file);
+
+            if (imagePreviewUrl) {
+                URL.revokeObjectURL(imagePreviewUrl);
+            }
+            setImagePreviewUrl(URL.createObjectURL(file));
+        } else {
+            // If no file is selected (e.g., user cancels, or we call it to clear)
+            setImageFile(null);
+            if (imagePreviewUrl) {
+                URL.revokeObjectURL(imagePreviewUrl);
+            }
+            setImagePreviewUrl(null);
         }
+    };
+
+    const handleClearImage = () => {
+        // Clear the file input element. This is important for re-selecting the same file.
+        const fileInput = document.getElementById('imageUpload'); // Ensure your input has this ID
+        if (fileInput) {
+            fileInput.value = ''; // Reset the input value
+        }
+        setImageFile(null);
+        if (imagePreviewUrl) {
+            URL.revokeObjectURL(imagePreviewUrl);
+        }
+        setImagePreviewUrl(null);
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
+        if (name === 'date') {
+            setDateError(null);
+
+            if (e.target.type === 'date') {
+                // Input from picker (YYYY-MM-DD) -> store as DD/MM/YYYY
+                const displayDate = isoToDisplayDate(value);
+                setFormData((prev) => ({ ...prev, [name]: displayDate }));
+                return;
+            }
+
+            // 🚨 FIX for manual year input and format restriction (using text input)
+            // Regex to allow typing DD/MM/YYYY while limiting year to 4 digits
+            const dateInputRegex = /^(\d{0,2}\/?\d{0,2}\/?\d{0,4})$/;
+            if (dateInputRegex.test(value)) {
+                setFormData((prev) => ({ ...prev, [name]: value }));
+            }
+            // Ignore input if it goes beyond the DD/MM/YYYY format
+            return;
+        }
+
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
+
+    // 🚨 NEW Handler to strictly enforce year logic on manual input (when blurring or on final submit)
+    const handleDateBlur = (e) => {
+        const dateString = e.target.value;
+        setDateError(null);
+
+        // First, check for full DD/MM/YYYY format
+        const fullFormatRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+        if (!fullFormatRegex.test(dateString)) {
+            if (dateString) {
+                setDateError("❌ Please enter the date in DD/MM/YYYY format.");
+                // If invalid format, reset year to 0000 and notify user
+                setFormData(prev => ({ ...prev, date: '00/00/0000' }));
+                e.target.focus(); // Keep focus for correction
+            }
+            return;
+        }
+
+        const isoDate = displayToIsoDate(dateString);
+
+        // Final range and year check (handles "2222" issue)
+        if (!isDateValidAndInRange(isoDate, minDateISO, maxDateISO)) {
+            const parts = dateString.split('/');
+            const inputYear = parseInt(parts[2], 10);
+            const currentYear = new Date().getFullYear();
+
+            if (inputYear > currentYear + 1) {
+                // 🚨 FIX for year 2222: set year to 0000 and show error
+                setDateError("❌ The selected year is too far in the future. Please choose a year within the next 6 months.");
+                setFormData(prev => ({ ...prev, date: `${parts[0]}/${parts[1]}/0000` }));
+                e.target.focus(); // Keep focus for correction
+            } else {
+                // General range error (past date or invalid day/month)
+                setDateError("❌ The date must be today or in the future and within the next 6 months.");
+                setFormData(prev => ({ ...prev, date: '00/00/0000' }));
+                e.target.focus(); // Keep focus for correction
+            }
+            return;
+        }
+    };
+
 
     const handleBeachChange = (e) => {
         const val = e.target.value;
@@ -138,7 +294,7 @@ export default function PublishCampaignForm() {
         setSearchStatusMessage('');
     };
 
-    // Auto-detect location
+    // Auto-detect location (using saved GEOAPIFY_API_KEY)
     const handleAutoLocation = async () => {
         setApiErrorMessage('');
         setSearchStatusMessage('Getting your current location...');
@@ -183,7 +339,7 @@ export default function PublishCampaignForm() {
         });
     };
 
-    // Search coordinates from manual input using Geoapify
+    // Search coordinates from manual input (using saved GEOAPIFY_API_KEY)
     const onSearchLocation = async () => {
         if (!manualLocation.trim()) {
             setSearchStatusMessage('Please enter a location to search.');
@@ -229,7 +385,29 @@ export default function PublishCampaignForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setStatus("Publishing campaign...");
+        setStatus("Validating form...");
+        setDateError(null);
+
+        // Perform the full date validation just before submission
+        const isoDateForValidation = displayToIsoDate(formData.date);
+
+        if (!isDateValidAndInRange(isoDateForValidation, minDateISO, maxDateISO)) {
+            const errorMessage = "❌ Please select a date that is today or in the future and within the next 6 months.";
+            setDateError(errorMessage);
+            setStatus(errorMessage);
+
+            // If the year is invalid (e.g., '2222'), reset it to 0000 on submit failure
+            if (formData.date.length === 10) {
+                const parts = formData.date.split('/');
+                const inputYear = parseInt(parts[2], 10);
+                const currentYear = new Date().getFullYear();
+                if (inputYear > currentYear + 1) {
+                    setFormData(prev => ({ ...prev, date: `${parts[0]}/${parts[1]}/0000` }));
+                }
+            }
+
+            return;
+        }
 
         const { locationLat, locationLon } = formData;
         if (!locationLat || !locationLon) {
@@ -317,9 +495,8 @@ export default function PublishCampaignForm() {
             </h2>
 
             <p className={`text-center mb-6 text-lg font-medium transition-colors duration-500 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                Organize a cleanup! Use this form to announce a **volunteer event** focused on a location that has been previously reported as polluted.
+                Initiate a cleanup effort. Use this form to announce a <strong>volunteer campaign</strong> dedicated to remediating sites previously identified as polluted.
             </p>
-            {/* 🛑 END UPDATED INTRODUCTION TEXT 🛑 */}
 
             <form onSubmit={handleSubmit} className="space-y-3">
                 {/* Campaign & Organizer */}
@@ -350,20 +527,33 @@ export default function PublishCampaignForm() {
                         <label htmlFor="date" className="block text-sm font-medium mb-1">
                             Date (DD/MM/YYYY)
                         </label>
-                        {/* We keep the dynamic type switching for DATE because it's the only way to use the DD/MM/YYYY placeholder */}
                         <input
-                            type="text"
+                            // 🚨 Using type="date" to let the browser enforce its min/max/4-digit year limits 
+                            // and type="text" when the stored date is empty for better manual input experience.
+                            // The value is switched between DD/MM/YYYY (state) and YYYY-MM-DD (input value)
+                            type={formData.date ? "date" : "text"}
                             id="date"
                             name="date"
                             placeholder="DD/MM/YYYY"
-                            value={formData.date}
+                            // Value is passed in YYYY-MM-DD (ISO) format when type="date"
+                            // or DD/MM/YYYY (state) format when type="text"
+                            value={formData.date ? displayToIsoDate(formData.date) : formData.date}
                             onChange={handleChange}
-                            onFocus={(e) => e.target.type = 'date'}
-                            onBlur={(e) => { if (!e.target.value) e.target.type = 'text' }}
+                            onBlur={handleDateBlur} // 🚨 New handler to enforce strict year/format checks on manual entry
+                            min={minDateISO} // Cannot choose past dates (Point 4)
+                            max={maxDateISO} // Cannot choose beyond 6 months (Point 3)
+                            maxLength={10} // Strictly limits the length of manual DD/MM/YYYY entry
                             className={`p-3 border rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full
-                ${isDarkMode ? 'border-emerald-500 bg-slate-700 text-gray-200 placeholder-emerald-300' : 'border-emerald-300 bg-white/70 text-gray-800 placeholder-emerald-700'}`}
+                            ${isDarkMode ? 'border-emerald-500 bg-slate-700 text-gray-200' : 'border-emerald-300 bg-white/70 text-gray-800'} 
+                            ${dateError ? 'border-red-500' : ''}`}
                             required
                         />
+                        {/* 📝 New note for user */}
+                        <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            You can choose a date from today up to 6 months from now.
+                        </p>
+                        {/* ❌ Display Date Validation Error */}
+                        {dateError && <p className={`text-xs mt-1 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>{dateError}</p>}
                     </div>
 
                     {/* Time Input and 'Now' Button */}
@@ -380,21 +570,26 @@ export default function PublishCampaignForm() {
                                 value={formData.time}
                                 onChange={handleChange}
                                 className={`flex-1 p-3 border rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block
-                    ${isDarkMode ? 'border-emerald-500 bg-slate-700 text-gray-200 placeholder-emerald-300' : 'border-emerald-300 bg-white/70 text-gray-800 placeholder-emerald-700'}`}
+                                ${isDarkMode ? 'border-emerald-500 bg-slate-700 text-gray-200 placeholder-emerald-300' : 'border-emerald-300 bg-white/70 text-gray-800 placeholder-emerald-700'}`}
                                 required
                             />
                             <button
                                 type="button"
                                 onClick={() => {
                                     const now = new Date();
+                                    // Set date to DD/MM/YYYY for the user
+                                    const day = String(now.getDate()).padStart(2, '0');
+                                    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                                    const year = now.getFullYear();
+
                                     setFormData(prev => ({
                                         ...prev,
-                                        date: now.toISOString().split('T')[0],
+                                        date: `${day}/${month}/${year}`, // DD/MM/YYYY (stored format)
                                         time: now.toTimeString().slice(0, 5) // HH:MM format
                                     }));
                                 }}
                                 className={`px-4 py-3 rounded-lg text-sm transition-colors duration-500 whitespace-nowrap
-                    ${isDarkMode ? 'bg-emerald-700 text-white hover:bg-emerald-600' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
+                                ${isDarkMode ? 'bg-emerald-700 text-white hover:bg-emerald-600' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
                             >
                                 Now
                             </button>
@@ -538,7 +733,26 @@ export default function PublishCampaignForm() {
                     }}
                 >
                     <p className={`text-center mb-1 text-sm ${isDarkMode ? 'placeholder-emerald-300' : 'placeholder-emerald-700'}`}>{imageFile ? `Selected: ${imageFile.name}` : `Drag & drop an image here, or click to select`}</p>
-                    <input type="file" accept="image/*" onChange={handleImageChange} className="absolute w-full h-full opacity-0 cursor-pointer" />
+                    <input type="file" id="imageUpload" accept="image/*" onChange={handleImageChange} className="absolute w-full h-full opacity-0 cursor-pointer" />
+
+                    {imagePreviewUrl && (
+                        <div className="mt-4 w-full flex justify-center relative"> {/* Add relative here for absolute positioning of button */}
+                            <img
+                                src={imagePreviewUrl}
+                                alt="Selected Image Preview"
+                                className="max-w-full h-40 object-contain rounded-lg shadow-md border"
+                            />
+                            {/* 🆕 "X" BUTTON FOR CLEARING IMAGE */}
+                            <button
+                                type="button"
+                                onClick={handleClearImage}
+                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold opacity-75 hover:opacity-100 transition-opacity duration-200"
+                                aria-label="Clear image"
+                            >
+                                X
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Description */}

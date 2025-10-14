@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { db } from '../../firebase';
+import React, { useState, useEffect } from 'react';
+import { db } from '../../firebase'; 
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default function ContactUsPage() {
@@ -19,9 +19,12 @@ export default function ContactUsPage() {
         lastName: "",
         mobile: "",
         email: "",
+        message: "", 
     });
 
     const allowedEmailEndings = [".com", ".org", ".net", ".co.il"];
+    const MAX_MESSAGE_LENGTH = 500; // Define max length
+    const MIN_MESSAGE_LENGTH = 10; // Define min length
     const [navbarHeight, setNavbarHeight] = useState(0);
 
     const validateName = (name) => /^[A-Za-z\s]{2,}$/.test(name);
@@ -37,6 +40,14 @@ export default function ContactUsPage() {
         if (!emailRegex.test(email)) return false;
         return allowedEmailEndings.some(end => email.endsWith(end));
     };
+    
+    // New validation function for message
+    const validateMessage = (message) => {
+        const trimmed = message.trim();
+        if (trimmed.length === 0) return "Message is required.";
+        if (trimmed.length < MIN_MESSAGE_LENGTH) return `Message must be at least ${MIN_MESSAGE_LENGTH} characters.`;
+        return ""; // Empty string means valid
+    }
 
     useEffect(() => {
         const observer = new MutationObserver(() => {
@@ -44,7 +55,6 @@ export default function ContactUsPage() {
         });
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
-        // Calculate navbar height dynamically
         const updateNavbarHeight = () => {
             const navbar = document.querySelector('header');
             if (navbar) setNavbarHeight(navbar.offsetHeight);
@@ -81,7 +91,12 @@ export default function ContactUsPage() {
             if (atCount > 1) val = val.slice(0, -1);
             newErrors.email = validateEmail(val) ? "" : "Invalid email format";
             setFormData(prev => ({ ...prev, email: val }));
+
+        } else if (name === "message") {
+            newErrors.message = validateMessage(value);
+            setFormData(prev => ({ ...prev, message: value }));
         }
+        
         setErrors(newErrors);
     };
 
@@ -92,14 +107,17 @@ export default function ContactUsPage() {
         const lastNameValid = validateName(formData.lastName);
         const mobileValid = validateMobile(formData.mobile);
         const emailValid = validateEmail(formData.email);
+        const messageError = validateMessage(formData.message);
+        const allValid = firstNameValid && lastNameValid && mobileValid && emailValid && messageError === "";
 
-        if (!firstNameValid || !lastNameValid || !mobileValid || !emailValid) {
+        if (!allValid) {
             setStatus("❌ Please correct the errors before submitting");
             setErrors({
                 firstName: firstNameValid ? "" : "Only letters and spaces, min 2 characters",
                 lastName: lastNameValid ? "" : "Only letters and spaces, min 2 characters",
                 mobile: mobileValid ? "" : "Invalid mobile number",
                 email: emailValid ? "" : "Invalid email format",
+                message: messageError, 
             });
             return;
         }
@@ -112,9 +130,9 @@ export default function ContactUsPage() {
             });
             setStatus("✅ Your message has been sent successfully!");
             setFormData({ firstName: "", lastName: "", mobile: "", email: "", message: "" });
-            setErrors({ firstName: "", lastName: "", mobile: "", email: "" });
+            setErrors({ firstName: "", lastName: "", mobile: "", email: "", message: "" });
         } catch (error) {
-            console.error(error);
+            console.error("Firebase submission error:", error);
             setStatus("❌ Failed to send your message. Please try again.");
         }
     };
@@ -159,7 +177,7 @@ export default function ContactUsPage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                 <div className="flex flex-col">
                                     <div className="flex items-center">
-                                        <span className="mr-2">+972</span>
+                                        <span className={`mr-2 ${currentTheme.includes('dark') ? 'text-emerald-300' : 'text-emerald-700'}`}>+972</span>
                                         <input type="tel" name="mobile" placeholder="Mobile No *"
                                             value={formData.mobile} onChange={handleChange} className={`${inputClass(errors.mobile)} flex-1`} required />
                                     </div>
@@ -173,8 +191,14 @@ export default function ContactUsPage() {
                             </div>
 
                             {/* Message */}
-                            <textarea name="message" placeholder="Message" rows={4} maxLength={500}
-                                value={formData.message} onChange={handleChange} className={inputClass(errors.message)} required></textarea>
+                            <div className="flex flex-col">
+                                <textarea name="message" placeholder={`Message * (min ${MIN_MESSAGE_LENGTH}, max ${MAX_MESSAGE_LENGTH} characters)`} rows={4} maxLength={MAX_MESSAGE_LENGTH}
+                                    value={formData.message} onChange={handleChange} className={inputClass(errors.message)} required></textarea>
+                                {errors.message && <span className="text-red-500 text-sm mt-1">{errors.message}</span>}
+                                <p className={`text-right text-sm mt-1 ${formData.message.length >= MAX_MESSAGE_LENGTH ? 'text-red-500' : currentTheme.includes('dark') ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                                    {formData.message.length}/{MAX_MESSAGE_LENGTH}
+                                </p>
+                            </div>
 
                             <button type="submit" className="w-full p-3 sm:p-3 bg-emerald-700 text-white rounded hover:bg-emerald-800 transition-all">
                                 Submit
@@ -184,12 +208,12 @@ export default function ContactUsPage() {
                         {status && <p className={`text-center mt-2 sm:mt-4 font-bold ${currentTheme.includes('dark') ? 'text-emerald-300' : 'text-emerald-900'}`}>{status}</p>}
                     </div>
 
-                    {/* Info Section */}
+                    {/* Info Section - Unchanged */}
+                    {/* ... (rest of the Info Section) ... */}
                     <div className="space-y-6 sm:space-y-8 order-2 md:order-1">
                         <h2 className={`text-2xl sm:text-3xl md:text-3xl font-extrabold mb-4 sm:mb-6 ${currentTheme.includes("dark") ? "text-emerald-300" : "text-emerald-900"}`}>
                             Get In Touch With Us Now!
                         </h2>
-
                         {/* Mission */}
                         <div className="flex items-start gap-3 sm:gap-4">
                             <div className="text-3xl p-2 rounded-full text-white">🎯</div>

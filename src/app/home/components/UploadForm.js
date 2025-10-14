@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from 'next/navigation';
-import { db, storage } from "../../../firebase"; // Assuming this path is correct
+import { db, storage } from "../../../firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
@@ -18,7 +18,7 @@ import piexif from "piexifjs";
 
 import { detectObjects } from "@/lib/yolo";
 import { detectTrashCircularNet } from "@/lib/circularnet";
-import { detectCircularNetObjects } from '@/lib/circularnet'; // Adjust path if needed
+import { detectCircularNetObjects } from '@/lib/circularnet';
 
 
 
@@ -96,17 +96,6 @@ export default function UploadForm({ onUploadSuccess }) {
         }
     };
 
-
-
-    /**
-   * Handles file selection, sets up the preview, and receives EXIF GPS data
-   * and YOLO/CircularNet auto description.
-   * @param {File | null} file - The original file object.
-   * @param {string | null} dataUrl - The Base64 string of the image.
-   * @param {number | null} exiFlat - The extracted latitude from EXIF.
-   * @param {number | null} exiFlon - The extracted longitude from EXIF.
-   * @param {string[] | string | null} autoDescription - The YOLO-generated description.
-   */
     const handleImageChange = async (file, dataUrl, exiFlat, exiFlon, autoDescription) => {
         // Update preview immediately
         setPreview(dataUrl);
@@ -116,7 +105,7 @@ export default function UploadForm({ onUploadSuccess }) {
         if (!file) {
             setPreview(null);
             setFile(null);
-            setDescription("")
+            setDescription("");
             if (isLocationFromImage) {
                 setLat(null);
                 setLon(null);
@@ -135,7 +124,6 @@ export default function UploadForm({ onUploadSuccess }) {
         // 1️⃣ YOLO detection (general objects)
         let yoloResults = [];
         if (autoDescription) {
-            // Use YOLO results passed in from ImageUploader
             yoloResults = Array.isArray(autoDescription) ? autoDescription : [autoDescription];
         } else {
             try {
@@ -153,10 +141,29 @@ export default function UploadForm({ onUploadSuccess }) {
             console.error("CircularNet detection failed:", err);
         }
 
-        // 3️⃣ Combine results and remove duplicates
-        const combined = [...new Set([].concat(yoloResults, trashResults))];
-        const desc = combined.length ? combined.join(", ") : "No objects detected";
+        // --- Combine YOLO + CircularNet results, remove duplicates, improve labels ---
+        let combined = [];
 
+        // Helper to safely map results to lowercase strings
+        const safeLower = arr => arr.filter(cls => typeof cls === "string").map(cls => cls.toLowerCase());
+
+        combined.push(...safeLower(yoloResults));
+        combined.push(...safeLower(trashResults));
+
+        // Remove duplicates
+        combined = [...new Set(combined)];
+
+        // Normalize/improve labels
+        combined = combined.map(cls => {
+            if (cls.includes("plastic bottle")) return "Plastic Bottle";
+            if (cls.includes("glass bottle") || cls.includes("vase")) return "Glass Bottle (Vase)";
+            if (cls.includes("bottle")) return "Bottle";
+            if (cls.includes("can")) return "Can";
+            if (cls.includes("other_trash") || cls.includes("other trash")) return "Other Trash";
+            return cls.charAt(0).toUpperCase() + cls.slice(1);
+        });
+
+        const desc = combined.length ? combined.join(", ") : "No objects detected";
         setDescription(desc);
         console.log("✅ Combined detected objects:", combined);
 

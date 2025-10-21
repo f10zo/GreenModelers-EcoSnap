@@ -59,16 +59,16 @@ The EcoSnap reporting process is designed to be simple and highly effective:
 5. **All reports are displayed in an interactive gallery** for the community and authorities, creating a powerful visualization of the problem.
 
 ---
-
 ## 🖼️ Demo / Screenshots
 
 You can place your screenshots directly in your repository and reference them here:
 
-![Home Page](./screenshots/home.png)
-![Upload Form](./screenshots/upload_form.png)
-![Map with Reports](./screenshots/map.png)
+![Gallery View](./public/screenshots/gallery-view.png)
+![Map View](./public/screenshots/map-view.png)
+![Upload Form](./public/screenshots/upload-form.png)
 
 ---
+
 
 ## 🙏 Contributing
 

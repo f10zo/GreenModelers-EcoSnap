@@ -2,9 +2,8 @@
 
 ## 🌿 About the Project
 
-**EcoSnap** is a community-driven platform dedicated to monitoring and protecting the **Sea of Galilee (Kinneret)**.  
-Our mission is to empower citizens to become active guardians of this vital natural resource by providing a simple and effective way to report pollution incidents.  
-By leveraging technology, we aim to create a shared database of pollution reports that can be used by local authorities and environmental organizations to take informed and timely action.
+**EcoSnap** is a community-driven platform for monitoring and protecting the Sea of Galilee (Kinneret).
+It empowers citizens to report pollution easily and builds a shared database for authorities and environmental organizations to take timely action.
 
 ---
 
@@ -61,9 +60,11 @@ The EcoSnap reporting process is designed to be simple and highly effective:
 ---
 ## 🖼️ Demo / Screenshots
 
-<img src="./public/screenshots/upload-form.png" alt="Upload Form" width="400"/>
-<img src="./public/screenshots/gallery-view.png" alt="Gallery View" width="400"/>
-<img src="./public/screenshots/map-view.png" alt="Map View" width="400"/>
+<p float="left">
+  <img src="./public/screenshots/upload-form.png" alt="Upload Form" width="200" />
+  <img src="./public/screenshots/gallery-view.png" alt="Gallery View" width="200" />
+  <img src="./public/screenshots/map-view.png" alt="Map View" width="200" />
+</p>
 
 ---
 

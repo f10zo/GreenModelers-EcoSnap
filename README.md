@@ -69,16 +69,18 @@ You can place your screenshots directly in your repository and reference them he
 ![Upload Form](./screenshots/upload_form.png)
 ![Map with Reports](./screenshots/map.png)
 
+---
+
 ## 🙏 Contributing
 
-We welcome contributions\! If you have ideas for improvements, new features, or want to report a bug, please feel free to contact us or open an issue/pull request on this repository.
-Or if you have any ideas for improvements or new features, contact us.
+We welcome contributions!  
+If you have ideas for improvements, new features, or want to report a bug, please feel free to contact us or open an **issue** / **pull request** on this repository.
 
+---
 
 ## ✉️ Contact Us
 
-If you have any questions or feedback, feel free to reach out!
+If you have any questions or feedback, feel free to reach out!  
 
-- Fatmeh Zoabi ✉️ **Email**: [fatmehzo3bi10@gmail.com](mailto:fatmehzo3bi10@gmail.com)
-- Diana Hujerat ✉️ **Email**: [htdiana9@gmail.com](mailto:htdiana9@gmail.com)
-
+- 👩‍💻 **Fatmeh Zoabi** – [fatmehzo3bi10@gmail.com](mailto:fatmehzo3bi10@gmail.com)  
+- 👩‍💻 **Diana Hujerat** – [htdiana9@gmail.com](mailto:htdiana9@gmail.com)

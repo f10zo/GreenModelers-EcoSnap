@@ -9,21 +9,21 @@ It empowers citizens to report pollution easily and builds a shared database for
 
 ## 🚀 Features
 
-- **Simple Reporting:** Upload a photo, add a description, and specify the pollution level easily.  
+- 📸 **Simple Reporting:** Upload a photo, add a description, and specify the pollution level easily.
+- 🌍 **Community Engagement:** Encourage citizens to actively participate in protecting the environment  
 - 📸 **Automatic Pollution Detection** using a YOLO model  
 - 🧠 **Auto-Generated Description** from uploaded images  
 - 📅 **Timestamped Reports** with image, description, and location  
-- 🌍 **Community Engagement:** Encourage citizens to actively participate in protecting the environment  
-- 🖼 **Interactive Gallery:** Browse all reported incidents, filter by pollution level, and sort by date  
 - ⚙️ **Continuous Deployment:** The project is deployed on Vercel, ensuring seamless updates  
 - 🔒 **Firebase Integration** for data storage and hosting  
 
 ---
-
 ## 🗺️ Visualization
 
 EcoSnap displays all user reports on a **map with pins** representing each pollution report.  
 Each pin shows a preview of the uploaded image, location, and date.  
+
+🖼 **Interactive Gallery:** Browse all reported incidents, filter by pollution level, and sort by date.  
 
 ✨ **Future Improvement:**  
 We plan to add a **heatmap layer** to highlight pollution density across regions.
@@ -61,9 +61,9 @@ The EcoSnap reporting process is designed to be simple and highly effective:
 ## 🖼️ Demo / Screenshots
 
 <p float="left">
-  <img src="./public/screenshots/upload-form.png" alt="Upload Form" width="200" />
-  <img src="./public/screenshots/gallery-view.png" alt="Gallery View" width="200" />
-  <img src="./public/screenshots/map-view.png" alt="Map View" width="200" />
+  <img src="./public/screenshots/upload-form.png" alt="Upload Form" width="220" height="280" />
+  <img src="./public/screenshots/map-view.png" alt="Map View" width="220" height="230" />
+  <img src="./public/screenshots/gallery-view.png" alt="Gallery View" width="220" height="400" />
 </p>
 
 ---

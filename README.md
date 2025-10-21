@@ -61,11 +61,9 @@ The EcoSnap reporting process is designed to be simple and highly effective:
 ---
 ## 🖼️ Demo / Screenshots
 
-You can place your screenshots directly in your repository and reference them here:
-
-![Gallery View](./public/screenshots/gallery-view.png)
-![Map View](./public/screenshots/map-view.png)
-![Upload Form](./public/screenshots/upload-form.png)
+<img src="./public/screenshots/upload-form.png" alt="Upload Form" width="400"/>
+<img src="./public/screenshots/gallery-view.png" alt="Gallery View" width="400"/>
+<img src="./public/screenshots/map-view.png" alt="Map View" width="400"/>
 
 ---
 

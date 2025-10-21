@@ -57,8 +57,6 @@ export const geocodeAddress = async (latitude, longitude) => {
         const data = await response.json();
 
         if (data && data.display_name) {
-            // 🛑 THE CRITICAL CHANGE IS HERE 🛑
-            // Return the full formatted address string.
             return data.display_name;
         } else {
             return "No address found for these coordinates.";

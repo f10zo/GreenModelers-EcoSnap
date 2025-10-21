@@ -15,9 +15,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    // 🛑 CHANGE MADE HERE: Added suppressHydrationWarning
     <html lang="en" className={inter.className} suppressHydrationWarning>
-      {/* The ClientLayout component wraps the children */}
       <ClientLayout>
         {children}
       </ClientLayout>
